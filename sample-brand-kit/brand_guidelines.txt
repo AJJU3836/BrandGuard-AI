@@ -1,0 +1,50 @@
+================================================================================
+INNOVEX / BRANDGUARD AI — BRAND COMPLIANCE & GOVERNANCE GUIDELINES
+Version: 1.2 | Governing Entity: Inkloom AI
+================================================================================
+
+1. BRAND MISSION & VOICE
+BrandGuard AI is the enterprise guardian of brand consistency, legal compliance,
+and reputation protection. We empower creators while giving compliance teams 
+transparent oversight.
+- Tone: Professional, Empathetic, Objective, Authoritative, Clear.
+- Avoid: Hyperbole, excessive emojis, sensationalism, aggressive sales pressure.
+
+2. TERMINOLOGY & NAMING CONVENTIONS
+- Official Product Name: "BrandGuard AI" (Note: Capital B, Capital G, space, capital AI).
+- Approved Variations: "BrandGuard Governance Engine", "BrandGuard Platform".
+- Banned Misspellings / Variants: "Brand Guard", "brandguard", "brand guard ai".
+- Approved Vocabulary:
+  * "Enterprise-grade"
+  * "Pre-publication governance"
+  * "Explainable AI findings"
+  * "Grounded verification"
+- Banned Vocabulary:
+  * "cheap" (Use "cost-effective" or "enterprise-value")
+  * "miracle"
+  * "magic software"
+  * "instant fix"
+
+3. PROMOTIONAL CLAIMS & REGULATORY COMPLIANCE (ASCI Standards)
+Following Advertising Standards Council of India (ASCI) directives:
+- Do NOT make unsubstantiated superlative claims:
+  * "#1 in India" is STRICTLY PROHIBITED unless backed by certified third-party market surveys.
+  * "100% safe" or "100% error-free" is PROHIBITED. State actual benchmarked accuracy.
+  * "Guaranteed results" is PROHIBITED.
+- Approved Verified Claims & Facts:
+  * "Over 500+ enterprise clients onboarded"
+  * "Founded in 2024"
+  * "ASCI pre-publication guideline compliant"
+  * "ISO-27001 certified architecture"
+
+4. VISUAL IDENTITY & COLOR PALETTE
+- Primary Brand Blue: #1E40AF (Deep Royal Blue)
+- Secondary Accent Blue: #2563EB (Vibrant Tech Blue)
+- Success Green: #10B981 (Compliant status)
+- Warning Amber: #F59E0B (Review needed)
+- Danger Rose: #E11D48 (Violation detected)
+- Prohibited: Fluorescent neon greens, unapproved pinks (#FF0055), low-contrast yellow text.
+
+5. ACCESSIBILITY RULES
+- All promotional images must carry descriptive alternative text (alt-text).
+- Text contrast ratio against background must adhere to WCAG AA (minimum 4.5:1).
