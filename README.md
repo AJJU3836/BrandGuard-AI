@@ -2,9 +2,28 @@
 
 > **Intelligent Brand-Governance Platform** — Catch brand problems before they're published.
 
+[![Live App](https://img.shields.io/badge/Live_App-Render-success)](https://brandguard-frontend-6swq.onrender.com)
+[![API Status](https://img.shields.io/badge/API-Live-blue)](https://brandguard-api-zfcd.onrender.com)
 [![Team](https://img.shields.io/badge/Team-Innovex-blue)]()
 [![Event](https://img.shields.io/badge/Event-Inkloom%20AI-purple)]()
 [![License](https://img.shields.io/badge/License-MIT-green)]()
+
+---
+
+## 🌐 Live Deployment & Demo
+
+| Service | Link | Status |
+|---|---|---|
+| **Frontend Application** | [brandguard-frontend-6swq.onrender.com](https://brandguard-frontend-6swq.onrender.com) | 🟢 Live |
+| **Backend REST API** | [brandguard-api-zfcd.onrender.com](https://brandguard-api-zfcd.onrender.com) | 🟢 Live |
+| **Interactive API Docs** | [brandguard-api-zfcd.onrender.com/docs](https://brandguard-api-zfcd.onrender.com/docs) | 🟢 Live |
+| **Submission PDF** | [docs/BrandGuard_AI_Round_2_Submission.pdf](docs/BrandGuard_AI_Round_2_Submission.pdf) | 📄 Documented |
+
+### 🔑 Demo Accounts (All passwords: `password123`)
+- **Admin**: `kaleajay626@gmail.com`
+- **Manager**: `mahesh@innovex.com`
+- **Reviewer**: `asma@innovex.com`
+- **Creator**: `shrushti@innovex.com`
 
 ---
 

@@ -50,7 +50,7 @@ Build a **pre-publication, AI-powered brand-governance platform** that:
 | B9 | Suggestion API — Generate diff-based suggestions & acceptance | ✅ Done | Creators/reviewers can accept or reject per finding |
 | B10 | Approval Workflow API — Status transitions, comments | ✅ Done | Draft → In Review → Changes Requested → Approved |
 | B11 | Audit Log — Immutable log of all actions | ✅ Done | Every draft creation, status update, and review logged |
-| B12 | Deployment — Cloud deploy, env setup | 🔄 In Progress | Ready for Render / Railway / Vercel deployment |
+| B12 | Deployment — Cloud deploy, env setup | ✅ Done | Deployed to Render (Frontend, Backend API, PostgreSQL DB) |
 
 ### Frontend Tasks (Mahesh 🔵)
 
@@ -126,6 +126,9 @@ Build a **pre-publication, AI-powered brand-governance platform** that:
 
 | Resource | Link |
 |---|---|
+| Live Frontend | https://brandguard-frontend-6swq.onrender.com |
+| Live API | https://brandguard-api-zfcd.onrender.com |
+| API Docs (Swagger) | https://brandguard-api-zfcd.onrender.com/docs |
 | GitHub Repo | https://github.com/AJJU3836/BrandGuard-AI |
 | Google Drive | https://drive.google.com/drive/folders/1ybSTBQjKro8z8dBaycZW9Flvnrpbdp3r?usp=sharing |
 | Team Lead Email | Kaleajay626@gmail.com |
