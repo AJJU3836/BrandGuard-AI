@@ -11,14 +11,23 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import auth, brand_kits, dashboard, drafts, review, workspaces
-from app.core.database import Base, engine
+from app.core.database import Base, engine, SessionLocal
+from app.core.seeder import seed_db_if_empty
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
-    # Create all tables on startup (Render + local dev)
+    # Create all tables on startup (PostgreSQL + SQLite)
     Base.metadata.create_all(bind=engine)
+    
+    # Auto-seed demo team, brand kit, and drafts if database is empty
+    db = SessionLocal()
+    try:
+        seed_db_if_empty(db)
+    finally:
+        db.close()
+        
     print("🛡️  BrandGuard AI Backend Started")
     yield
     print("🛡️  BrandGuard AI Backend Shutting Down")
