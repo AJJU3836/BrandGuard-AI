@@ -19,6 +19,11 @@ db_url = settings.DATABASE_URL
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
+# Ensure SSL mode for Render PostgreSQL if not already specified
+if db_url.startswith("postgresql://") and "sslmode" not in db_url:
+    separator = "&" if "?" in db_url else "?"
+    db_url = f"{db_url}{separator}sslmode=require"
+
 is_sqlite = db_url.startswith("sqlite")
 
 engine_kwargs = {}
@@ -27,7 +32,19 @@ if is_sqlite:
 else:
     engine_kwargs["pool_pre_ping"] = True
 
-engine = create_engine(db_url, **engine_kwargs)
+try:
+    engine = create_engine(db_url, **engine_kwargs)
+    # Quick connectivity test
+    if not is_sqlite:
+        with engine.connect() as conn:
+            print(" Connected to PostgreSQL database successfully.")
+except Exception as e:
+    print(f" Failed to initialize PostgreSQL ({e}). Falling back to SQLite.")
+    from pathlib import Path
+    _fallback_db = Path(__file__).resolve().parent.parent.parent / "brandguard_demo.db"
+    db_url = f"sqlite:///{_fallback_db}"
+    engine = create_engine(db_url, connect_args={"check_same_thread": False})
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
