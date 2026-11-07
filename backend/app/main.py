@@ -4,6 +4,7 @@ BrandGuard AI — Main Application Entry Point
 Run with: uvicorn app.main:app --reload
 """
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -16,7 +17,7 @@ from app.core.database import Base, engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
-    # Create all tables (dev only — use Alembic migrations in production)
+    # Create all tables on startup (Render + local dev)
     Base.metadata.create_all(bind=engine)
     print("🛡️  BrandGuard AI Backend Started")
     yield
@@ -30,10 +31,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow all origins in development
+# CORS — allow Render frontend domain + localhost for dev
+FRONTEND_URL = os.getenv("FRONTEND_URL", "")
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+if FRONTEND_URL:
+    allowed_origins.append(FRONTEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins if FRONTEND_URL else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

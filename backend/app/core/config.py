@@ -17,7 +17,7 @@ _ENV_PATH = _BACKEND_DIR / ".env"
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    # Database — default to local demo sqlite if unset
+    # Database — defaults to local SQLite for dev; Render injects DATABASE_URL for production
     DATABASE_URL: str = f"sqlite:///{_BACKEND_DIR.parent / 'brandguard_demo.db'}"
 
     # JWT Auth
