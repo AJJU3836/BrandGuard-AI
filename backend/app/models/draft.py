@@ -28,4 +28,5 @@ class Draft(Base):
     creator = relationship("User", back_populates="drafts", foreign_keys=[creator_id])
     reviewer = relationship("User", foreign_keys=[reviewer_id])
     findings = relationship("Finding", back_populates="draft", cascade="all, delete-orphan")
+    versions = relationship("DraftVersion", back_populates="draft", cascade="all, delete-orphan", order_by="DraftVersion.version_number")
     comments = relationship("Comment", back_populates="draft", cascade="all, delete-orphan")

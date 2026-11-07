@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, JSON
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base, GUID
@@ -17,6 +17,7 @@ class GuidelineChunk(Base):
     content = Column(Text, nullable=False)  # The chunk text
     chunk_index = Column(Integer, nullable=False)
     source_section = Column(String(255), nullable=True)  # Which section this came from
+    embedding = Column(JSON, nullable=True)  # Vector embedding float array for semantic retrieval
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships

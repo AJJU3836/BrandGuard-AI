@@ -11,9 +11,11 @@ from app.core.security import get_current_user
 from app.models.audit_log import AuditLog
 from app.models.comment import Comment
 from app.models.draft import Draft
+from app.models.draft_version import DraftVersion
 from app.models.user import User
 from app.schemas.comment import CommentCreate, CommentResponse
 from app.schemas.draft import DraftCreate, DraftResponse, DraftStatusUpdate
+from app.schemas.draft_version import DraftContentUpdate, DraftVersionResponse
 
 router = APIRouter(prefix="/api/workspaces/{workspace_id}/drafts", tags=["Drafts"])
 
@@ -37,6 +39,15 @@ def create_draft(
     )
     db.add(draft)
     db.flush()
+
+    # Save initial version snapshot
+    v1 = DraftVersion(
+        draft_id=draft.id,
+        version_number=1,
+        content=payload.content,
+        change_summary="Initial draft",
+    )
+    db.add(v1)
 
     # Audit log
     log = AuditLog(
@@ -172,5 +183,85 @@ def list_comments(
         db.query(Comment)
         .filter(Comment.draft_id == draft_id)
         .order_by(Comment.created_at.asc())
+        .all()
+    )
+
+
+# ── Revision History Endpoints ──────────────────────────────────────────
+
+
+@router.put("/{draft_id}/content", response_model=DraftResponse)
+def update_draft_content(
+    workspace_id: UUID,
+    draft_id: UUID,
+    payload: DraftContentUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update the draft content and save a new version snapshot."""
+    draft = db.query(Draft).filter(
+        Draft.id == draft_id,
+        Draft.workspace_id == workspace_id,
+    ).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found.")
+
+    # Determine next version number
+    max_ver = (
+        db.query(DraftVersion.version_number)
+        .filter(DraftVersion.draft_id == draft_id)
+        .order_by(DraftVersion.version_number.desc())
+        .first()
+    )
+    next_ver = (max_ver[0] + 1) if max_ver else 1
+
+    # Save version snapshot
+    version = DraftVersion(
+        draft_id=draft_id,
+        version_number=next_ver,
+        content=payload.content,
+        change_summary=payload.change_summary or f"Version {next_ver}",
+    )
+    db.add(version)
+
+    # Update draft content
+    draft.content = payload.content
+
+    # Audit log
+    log = AuditLog(
+        workspace_id=workspace_id,
+        user_id=current_user.id,
+        action="draft_content_updated",
+        entity_type="draft",
+        entity_id=draft.id,
+        details={"version_number": next_ver, "change_summary": version.change_summary},
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(draft)
+
+    return draft
+
+
+@router.get("/{draft_id}/versions", response_model=List[DraftVersionResponse])
+def list_versions(
+    workspace_id: UUID,
+    draft_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """List all content versions for a draft, ordered newest first."""
+    # Verify draft exists in this workspace
+    draft = db.query(Draft).filter(
+        Draft.id == draft_id,
+        Draft.workspace_id == workspace_id,
+    ).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found.")
+
+    return (
+        db.query(DraftVersion)
+        .filter(DraftVersion.draft_id == draft_id)
+        .order_by(DraftVersion.version_number.desc())
         .all()
     )

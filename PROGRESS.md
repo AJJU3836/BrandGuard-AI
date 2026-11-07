@@ -1,6 +1,6 @@
 # 📊 BrandGuard AI — Progress Tracker
 
-> **Last Updated:** 2026-11-06
+> **Last Updated:** 2026-11-07
 > **Team:** Innovex (Ajay, Mahesh, Asma, Shrushti)
 > **Repo:** https://github.com/AJJU3836/BrandGuard-AI
 
@@ -45,7 +45,7 @@ Build a **pre-publication, AI-powered brand-governance platform** that:
 | B4 | Brand Kit Upload API — Accept text/clauses, store rules | ✅ Done | Full CRUD in `/api/workspaces/{id}/brand-kits/` |
 | B5 | Guideline Indexing — Splitting into clauses for retrieval | ✅ Done | RecursiveCharacterTextSplitter in `brand_kit_service.py` |
 | B6 | Rule Engine — Banned terms, approved terms variants, unsupported claims, color palette | ✅ Done | Tested & working: regex word boundaries + ASCI claims matching |
-| B7 | AI Review Engine — LLM-based tone/claim check, grounded in retrieved guidelines | 🔄 In Progress | Scaffolding & prompt interface created; ready for live API key |
+| B7 | AI Review Engine — LLM-based tone/claim check, grounded in retrieved guidelines | ✅ Done | Gemini/OpenAI API + RAG retrieval + intelligent local semantic fallback |
 | B8 | Findings API — Return findings with severity, explanation, source citation | ✅ Done | Returns structured findings with citation & suggestion |
 | B9 | Suggestion API — Generate diff-based suggestions & acceptance | ✅ Done | Creators/reviewers can accept or reject per finding |
 | B10 | Approval Workflow API — Status transitions, comments | ✅ Done | Draft → In Review → Changes Requested → Approved |
@@ -95,11 +95,12 @@ Build a **pre-publication, AI-powered brand-governance platform** that:
 
 | # | Task | Owner | Status |
 |---|---|---|---|
-| R3-1 | Image & accessibility checks (logo, palette, alt-text, contrast) | Ajay 🟢 | ⬜ Not Started |
-| R3-2 | Claim verification against approved facts list | Ajay 🟢 | 🔄 In Progress (Rule regex ready; LLM expansion next) |
+| R3-1 | Image & accessibility checks (logo, palette, alt-text, contrast) | Ajay 🟢 | ✅ Done (Image audit endpoint, WCAG AA alt-text rules, UI image upload & visual card) |
+| R3-2 | Claim verification against approved facts list | Ajay 🟢 | ✅ Done (Rule regex + deep semantic verification against approved facts) |
 | R3-3 | Guideline-gap insights — dashboard shows unclear rules | Ajay 🟢 + Mahesh 🔵 | ✅ Done (Aggregated in Dashboard API & UI) |
-| R3-4 | Revision history — visual diff between versions + reviewer comments | Mahesh 🔵 | 🔄 In Progress (Comments & status history active) |
-| R3-5 | AI-use disclosure UI | Mahesh 🔵 | ✅ Done (Audit log & finding badges state AI/Rule attribution) |
+| R3-4 | Revision history — visual diff between versions + reviewer comments | Mahesh 🔵 | ✅ Done (DraftVersion model, versions API, VersionHistory modal with word-diff compare) |
+| R3-5 | AI-use disclosure UI | Mahesh 🔵 | ✅ Done (Audit log, clear color-coded AI vs Deterministic Rule badges, model transparency & tooltips) |
+| R3-6 | Findings Filtering & Export | Mahesh 🔵 + Ajay 🟢 | ✅ Done (Severity, category, status & text filtering + CSV and JSON downloadable report endpoints) |
 | R3-6 | Testing evidence — compile user feedback, test results | Asma 🟡 | ⬜ Not Started |
 | R3-7 | Privacy & responsible-design explanation | Asma 🟡 | ✅ Done (Documented in Plan & Readme) |
 | R3-8 | Demo video script & recording | Shrushti 🟣 | ⬜ Not Started |
