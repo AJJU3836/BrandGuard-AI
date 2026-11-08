@@ -18,15 +18,20 @@ from app.core.seeder import seed_db_if_empty
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: startup and shutdown events."""
-    # Create all tables on startup (PostgreSQL + SQLite)
-    Base.metadata.create_all(bind=engine)
-    
-    # Auto-seed demo team, brand kit, and drafts if database is empty
-    db = SessionLocal()
     try:
-        seed_db_if_empty(db)
-    finally:
-        db.close()
+        # Create all tables on startup (PostgreSQL + SQLite)
+        Base.metadata.create_all(bind=engine)
+        
+        # Auto-seed demo team, brand kit, and drafts if database is empty
+        db = SessionLocal()
+        try:
+            seed_db_if_empty(db)
+        except Exception as e:
+            print(f"⚠️ Auto-seed exception: {e}")
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"⚠️ Lifespan setup exception: {e}")
         
     print("🛡️  BrandGuard AI Backend Started")
     yield

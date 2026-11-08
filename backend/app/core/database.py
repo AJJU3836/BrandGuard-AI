@@ -19,8 +19,9 @@ db_url = settings.DATABASE_URL
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
-# Ensure SSL mode for Render PostgreSQL if not already specified
-if db_url.startswith("postgresql://") and "sslmode" not in db_url:
+# SSL is only required for external Render Postgres connections (containing .render.com).
+# Internal Render connections (e.g. dpg-xxx-a) use the private network and do NOT use SSL.
+if "render.com" in db_url and "sslmode" not in db_url:
     separator = "&" if "?" in db_url else "?"
     db_url = f"{db_url}{separator}sslmode=require"
 
@@ -31,15 +32,16 @@ if is_sqlite:
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
     engine_kwargs["pool_pre_ping"] = True
+    engine_kwargs["connect_args"] = {"connect_timeout": 5}
 
 try:
     engine = create_engine(db_url, **engine_kwargs)
-    # Quick connectivity test
+    # Quick connectivity check with 5s timeout
     if not is_sqlite:
         with engine.connect() as conn:
-            print(" Connected to PostgreSQL database successfully.")
+            print("Connected to PostgreSQL database successfully.")
 except Exception as e:
-    print(f" Failed to initialize PostgreSQL ({e}). Falling back to SQLite.")
+    print(f"Failed to connect to database ({e}). Falling back to local SQLite.")
     from pathlib import Path
     _fallback_db = Path(__file__).resolve().parent.parent.parent / "brandguard_demo.db"
     db_url = f"sqlite:///{_fallback_db}"
