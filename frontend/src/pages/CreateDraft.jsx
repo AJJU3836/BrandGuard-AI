@@ -25,6 +25,19 @@ export default function CreateDraft() {
     toast.success('Sample draft loaded with typical ASCI & brand guideline violations!')
   }
 
+  const handleCompliantSample = () => {
+    setTitle('Q4 Enterprise Innovation & Platform Launch')
+    setContentType('social_post')
+    setContent(
+      "🚀 We are proud to present BrandGuard AI by Innovex! " +
+      "Engineered to help enterprise marketing and design teams automate brand compliance, tone consistency, and ASCI regulatory standards with explainable AI. " +
+      "Over 500+ enterprise clients onboarded worldwide. " +
+      "Primary brand palette verified: #1E40AF and #2563EB. " +
+      "Schedule a walkthrough with our governance specialists today."
+    )
+    toast.success('Compliant draft loaded (0 violations anticipated)!')
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!content.trim()) {
@@ -77,20 +90,31 @@ export default function CreateDraft() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           onClick={() => navigate('/drafts')}
           className="text-sm font-medium text-gray-500 hover:text-gray-700 flex items-center gap-1.5"
         >
           <ArrowLeft className="w-4 h-4" /> Back to drafts
         </button>
-        <button
-          type="button"
-          onClick={handleQuickSample}
-          className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-semibold hover:bg-amber-100 transition-colors flex items-center gap-1.5"
-        >
-          <Sparkles className="w-3.5 h-3.5" /> Load Violative Sample (Demo)
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleQuickSample}
+            className="px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold hover:bg-amber-100 transition-colors flex items-center gap-1.5 shadow-2xs"
+            title="Load sample with intentional guideline & regulatory violations"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" /> Violative Sample (Demo)
+          </button>
+          <button
+            type="button"
+            onClick={handleCompliantSample}
+            className="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold hover:bg-emerald-100 transition-colors flex items-center gap-1.5 shadow-2xs"
+            title="Load sample adhering 100% to brand kit rules"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Compliant Sample (Green Pass)
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm space-y-6">

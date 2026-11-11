@@ -110,12 +110,30 @@ export default function DraftReview() {
 
   useEffect(() => {
     fetchDraftData()
-  }, [draftId])
+  }, [draftId, user?.email])
+
+  const getWsId = async () => {
+    if (user?.workspace_id) return user.workspace_id
+    if (draft?.workspace_id) return draft.workspace_id
+    try {
+      const wsRes = await api.get('/workspaces/')
+      if (wsRes.data && wsRes.data.length > 0) return wsRes.data[0].id
+    } catch (e) {
+      console.error(e)
+    }
+    return null
+  }
 
   const fetchDraftData = async () => {
     try {
       setLoading(true)
-      const wsId = user?.workspace_id
+      let wsId = user?.workspace_id
+      if (!wsId) {
+        const wsRes = await api.get('/workspaces/')
+        if (wsRes.data && wsRes.data.length > 0) {
+          wsId = wsRes.data[0].id
+        }
+      }
       if (!wsId) return
 
       const [draftRes, findingsRes, commentsRes, versionsRes] = await Promise.all([
@@ -140,7 +158,8 @@ export default function DraftReview() {
   const handleReReview = async () => {
     try {
       setReReviewing(true)
-      const res = await api.post(`/workspaces/${user.workspace_id}/drafts/${draftId}/review/`)
+      const wsId = await getWsId()
+      const res = await api.post(`/workspaces/${wsId}/drafts/${draftId}/review/`)
       toast.success(res.data.message || 'Review completed!')
       fetchDraftData()
     } catch (err) {
@@ -152,8 +171,9 @@ export default function DraftReview() {
 
   const handleUpdateFindingStatus = async (findingId, newStatus) => {
     try {
+      const wsId = await getWsId()
       await api.put(
-        `/workspaces/${user.workspace_id}/drafts/${draftId}/review/findings/${findingId}`,
+        `/workspaces/${wsId}/drafts/${draftId}/review/findings/${findingId}`,
         { status: newStatus }
       )
       toast.success(`Suggestion marked as ${newStatus}`)
@@ -173,8 +193,9 @@ export default function DraftReview() {
             ? customReplacements[finding.id]
             : getSuggestedReplacement(finding.suggestion, finding.text_highlight))
 
+      const wsId = await getWsId()
       const res = await api.post(
-        `/workspaces/${user.workspace_id}/drafts/${draftId}/review/findings/${finding.id}/apply`,
+        `/workspaces/${wsId}/drafts/${draftId}/review/findings/${finding.id}/apply`,
         { custom_replacement: replacementText }
       )
 
@@ -185,7 +206,7 @@ export default function DraftReview() {
       setEditingFindingId(null)
 
       try {
-        const vRes = await api.get(`/workspaces/${user.workspace_id}/drafts/${draftId}/versions`)
+        const vRes = await api.get(`/workspaces/${wsId}/drafts/${draftId}/versions`)
         setVersions(vRes.data || [])
       } catch (vErr) {
         console.error('Failed to reload versions:', vErr)
@@ -259,7 +280,8 @@ export default function DraftReview() {
 
   const handleUpdateDraftStatus = async (newStatus) => {
     try {
-      await api.put(`/workspaces/${user.workspace_id}/drafts/${draftId}/status`, {
+      const wsId = await getWsId()
+      await api.put(`/workspaces/${wsId}/drafts/${draftId}/status`, {
         status: newStatus,
       })
       toast.success(`Draft status updated to ${newStatus.replace('_', ' ')}`)
@@ -275,7 +297,8 @@ export default function DraftReview() {
 
     try {
       setCommentSubmitting(true)
-      const res = await api.post(`/workspaces/${user.workspace_id}/drafts/${draftId}/comments`, {
+      const wsId = await getWsId()
+      const res = await api.post(`/workspaces/${wsId}/drafts/${draftId}/comments`, {
         content: newComment,
       })
       setComments([...comments, res.data])
@@ -314,8 +337,9 @@ export default function DraftReview() {
       formData.append('image_name', selectedImageFile ? selectedImageFile.name : 'Visual-Asset.png')
       formData.append('alt_text', altText)
 
+      const wsId = await getWsId()
       const res = await api.post(
-        `/workspaces/${user.workspace_id}/drafts/${draftId}/review/image`,
+        `/workspaces/${wsId}/drafts/${draftId}/review/image`,
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -324,7 +348,7 @@ export default function DraftReview() {
 
       toast.success(`Image audit generated ${res.data.length} visual findings`)
       // Refresh findings list to include new visual & accessibility checks
-      const updatedFindings = await api.get(`/workspaces/${user.workspace_id}/drafts/${draftId}/review/findings`)
+      const updatedFindings = await api.get(`/workspaces/${wsId}/drafts/${draftId}/review/findings`)
       setFindings(updatedFindings.data)
 
       // Retain audited asset summary for user visibility
@@ -352,8 +376,9 @@ export default function DraftReview() {
   // Export Findings as CSV or JSON
   const handleExport = async (format) => {
     try {
+      const wsId = await getWsId()
       const res = await api.get(
-        `/workspaces/${user.workspace_id}/drafts/${draftId}/review/export?format=${format}`,
+        `/workspaces/${wsId}/drafts/${draftId}/review/export?format=${format}`,
         { responseType: format === 'csv' ? 'blob' : 'json' }
       )
 

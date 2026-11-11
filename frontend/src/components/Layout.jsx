@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Shield, LayoutDashboard, FileText, Palette, LogOut, User } from 'lucide-react'
+import { Shield, LayoutDashboard, FileText, Palette, LogOut, User, Sparkles } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -8,13 +10,34 @@ const navItems = [
   { to: '/drafts', icon: FileText, label: 'Drafts' },
 ]
 
+const ROLE_PRESETS = [
+  { label: '👑 Admin', role: 'admin', email: 'kaleajay626@gmail.com', name: 'Ajay' },
+  { label: '👔 Manager', role: 'manager', email: 'mahesh@innovex.com', name: 'Mahesh' },
+  { label: '🔍 Reviewer', role: 'reviewer', email: 'asma@innovex.com', name: 'Asma' },
+  { label: '✍️ Creator', role: 'creator', email: 'shrushti@innovex.com', name: 'Shrushti' },
+]
+
 export default function Layout() {
-  const { user, logout } = useAuth()
+  const { user, logout, quickSwitch } = useAuth()
+  const [switchingRole, setSwitchingRole] = useState(false)
   const navigate = useNavigate()
 
   const handleLogout = () => {
     logout()
     navigate('/login')
+  }
+
+  const handleSwitchRole = async (targetEmail) => {
+    if (user?.email === targetEmail) return
+    try {
+      setSwitchingRole(true)
+      await quickSwitch(targetEmail)
+      toast.success(`Switched active persona to ${targetEmail}`)
+    } catch (err) {
+      toast.error('Failed to switch persona')
+    } finally {
+      setSwitchingRole(false)
+    }
   }
 
   return (
@@ -50,6 +73,39 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Demo Role Switcher for Evaluators / Judges */}
+        <div className="px-3.5 py-3 border-t border-brand-800/70 bg-brand-950/30">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-brand-300 mb-2">
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Role Switcher</span>
+            </span>
+            <span className="text-[10px] text-brand-400 font-mono">1-Click</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5 text-xs">
+            {ROLE_PRESETS.map((r) => {
+              const isActive = user?.email === r.email
+              return (
+                <button
+                  key={r.email}
+                  type="button"
+                  disabled={switchingRole || isActive}
+                  onClick={() => handleSwitchRole(r.email)}
+                  className={`px-2 py-1.5 rounded-lg text-left font-medium transition-all flex items-center justify-between ${
+                    isActive
+                      ? 'bg-brand-600 text-white font-semibold shadow-xs ring-1 ring-white/20'
+                      : 'bg-brand-800/50 text-brand-200 hover:bg-brand-800 hover:text-white'
+                  }`}
+                  title={`Switch to ${r.role} (${r.name})`}
+                >
+                  <span className="truncate">{r.label}</span>
+                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 ml-1" />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
         {/* User info + logout */}
         <div className="p-4 border-t border-brand-800">

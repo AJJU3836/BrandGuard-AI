@@ -28,10 +28,17 @@ export default function Drafts() {
   const fetchDrafts = async () => {
     try {
       setLoading(true)
-      if (user?.workspace_id) {
+      let wsId = user?.workspace_id
+      if (!wsId) {
+        const wsRes = await api.get('/workspaces/')
+        if (wsRes.data && wsRes.data.length > 0) {
+          wsId = wsRes.data[0].id
+        }
+      }
+      if (wsId) {
         const url = filterStatus === 'all' 
-          ? `/workspaces/${user.workspace_id}/drafts/`
-          : `/workspaces/${user.workspace_id}/drafts/?status=${filterStatus}`
+          ? `/workspaces/${wsId}/drafts/`
+          : `/workspaces/${wsId}/drafts/?status=${filterStatus}`
         const res = await api.get(url)
         setDrafts(res.data)
       }

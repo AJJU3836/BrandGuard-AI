@@ -11,6 +11,7 @@ from app.core.security import (
     verify_password,
 )
 from app.models.user import User
+from app.models.workspace import Workspace
 from app.schemas.user import Token, UserCreate, UserLogin, UserResponse
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -27,11 +28,22 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
             detail="A user with this email already exists.",
         )
 
+    # Link new users to existing workspace or create default
+    default_ws = db.query(Workspace).first()
+    if not default_ws:
+        default_ws = Workspace(
+            name="Innovex Governance",
+            description="Official Innovex workspace for intelligent brand governance."
+        )
+        db.add(default_ws)
+        db.flush()
+
     user = User(
         email=payload.email,
         password_hash=hash_password(payload.password),
         full_name=payload.full_name,
         role=payload.role,
+        workspace_id=default_ws.id,
     )
     db.add(user)
     db.commit()
@@ -53,6 +65,14 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password.",
         )
+
+    # Ensure user is linked to a workspace
+    if not user.workspace_id:
+        default_ws = db.query(Workspace).first()
+        if default_ws:
+            user.workspace_id = default_ws.id
+            db.commit()
+            db.refresh(user)
 
     token = create_access_token(data={"sub": str(user.id)})
     return Token(

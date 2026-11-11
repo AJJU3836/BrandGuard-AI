@@ -39,10 +39,17 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      if (user?.workspace_id) {
+      let wsId = user?.workspace_id
+      if (!wsId) {
+        const wsRes = await api.get('/workspaces/')
+        if (wsRes.data && wsRes.data.length > 0) {
+          wsId = wsRes.data[0].id
+        }
+      }
+      if (wsId) {
         const [statsRes, auditRes] = await Promise.all([
-          api.get(`/workspaces/${user.workspace_id}/dashboard/stats`),
-          api.get(`/workspaces/${user.workspace_id}/dashboard/audit-log?limit=10`),
+          api.get(`/workspaces/${wsId}/dashboard/stats`),
+          api.get(`/workspaces/${wsId}/dashboard/audit-log?limit=10`),
         ])
         setStats(statsRes.data)
         setAuditLogs(auditRes.data)

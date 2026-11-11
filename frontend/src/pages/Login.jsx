@@ -46,72 +46,109 @@ export default function Login() {
     }
   }
 
+  const handleDirectLogin = async (demoEmail) => {
+    setEmail(demoEmail)
+    setPassword('password123')
+    setLoading(true)
+    setSlowServerHint(false)
+    try {
+      await login(demoEmail, 'password123')
+      toast.success('Signed in successfully!')
+      navigate('/')
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const fillDemo = (demoEmail) => {
     setEmail(demoEmail)
     setPassword('password123')
   }
 
+  const demoAccounts = [
+    {
+      role: 'Admin',
+      name: 'Ajay Kale',
+      email: 'kaleajay626@gmail.com',
+      badge: '👑 Admin',
+      desc: 'Full Governance & System Audit',
+      color: 'border-purple-200 hover:border-purple-400 bg-purple-50/40 text-purple-900',
+    },
+    {
+      role: 'Manager',
+      name: 'Mahesh Gadekar',
+      email: 'mahesh@innovex.com',
+      badge: '👔 Manager',
+      desc: 'Audit Logs & Guideline Gaps',
+      color: 'border-blue-200 hover:border-blue-400 bg-blue-50/40 text-blue-900',
+    },
+    {
+      role: 'Reviewer',
+      name: 'Asma Inamdar',
+      email: 'asma@innovex.com',
+      badge: '🔍 Reviewer',
+      desc: 'Draft Approval & Verification',
+      color: 'border-emerald-200 hover:border-emerald-400 bg-emerald-50/40 text-emerald-900',
+    },
+    {
+      role: 'Creator',
+      name: 'Shrushti Kharadkar',
+      email: 'shrushti@innovex.com',
+      badge: '✍️ Creator',
+      desc: 'Submit Drafts & 1-Click Fixes',
+      color: 'border-amber-200 hover:border-amber-400 bg-amber-50/40 text-amber-900',
+    },
+  ]
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-900 via-brand-800 to-blue-900 px-4 py-8">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <Shield className="w-10 h-10 text-brand-600" />
-          <h1 className="text-2xl font-bold text-gray-900">BrandGuard AI</h1>
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg border border-gray-100">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="w-11 h-11 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-brand-500/30">
+            <Shield className="w-7 h-7" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">BrandGuard AI</h1>
+            <p className="text-xs text-gray-500">Pre-Publication Governance Platform</p>
+          </div>
         </div>
 
-        <h2 className="text-xl font-semibold text-center mb-4">Sign In</h2>
-
         {/* Demo Quick-Fill Bar for Examiners/Judges */}
-        <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-900 mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>Judge / Examiner Demo Accounts (1-Click Fill):</span>
+        <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+              <Sparkles className="w-4 h-4 text-brand-600" />
+              <span>Judge / Examiner Demo Accounts</span>
+            </div>
+            <span className="text-[11px] font-mono font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+              Password: password123
+            </span>
           </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            <button
-              type="button"
-              onClick={() => fillDemo('kaleajay626@gmail.com')}
-              className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium text-left transition-all ${
-                email === 'kaleajay626@gmail.com'
-                  ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-brand-300'
-              }`}
-            >
-              👑 Admin (Ajay)
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemo('mahesh@innovex.com')}
-              className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium text-left transition-all ${
-                email === 'mahesh@innovex.com'
-                  ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-brand-300'
-              }`}
-            >
-              👔 Manager (Mahesh)
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemo('asma@innovex.com')}
-              className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium text-left transition-all ${
-                email === 'asma@innovex.com'
-                  ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-brand-300'
-              }`}
-            >
-              🔍 Reviewer (Asma)
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemo('shrushti@innovex.com')}
-              className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium text-left transition-all ${
-                email === 'shrushti@innovex.com'
-                  ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-brand-300'
-              }`}
-            >
-              ✍️ Creator (Shrushti)
-            </button>
+          <p className="text-[11px] text-slate-500 mb-3">
+            Click any role below to <strong>1-Click Instant Sign-In</strong> without typing:
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {demoAccounts.map((acc) => (
+              <button
+                key={acc.email}
+                type="button"
+                disabled={loading}
+                onClick={() => handleDirectLogin(acc.email)}
+                className={`text-left p-2.5 rounded-xl border transition-all text-xs group hover:shadow-sm ${acc.color} ${
+                  email === acc.email ? 'ring-2 ring-brand-500 shadow-sm' : ''
+                }`}
+                title={`Sign in as ${acc.role} (${acc.email})`}
+              >
+                <div className="flex items-center justify-between font-semibold">
+                  <span>{acc.badge}</span>
+                  <span className="text-[10px] opacity-70 group-hover:opacity-100 font-normal">Instant ➔</span>
+                </div>
+                <div className="text-[11px] font-medium text-slate-700 mt-1 truncate">{acc.name}</div>
+                <div className="text-[10px] text-slate-400 truncate font-mono">{acc.email}</div>
+              </button>
+            ))}
           </div>
         </div>
 

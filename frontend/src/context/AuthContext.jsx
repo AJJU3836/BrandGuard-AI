@@ -50,8 +50,12 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const quickSwitch = async (email) => {
+    return login(email, 'password123')
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, quickSwitch }}>
       {children}
     </AuthContext.Provider>
   )
