@@ -26,3 +26,16 @@ class FindingResponse(BaseModel):
 
 class FindingStatusUpdate(BaseModel):
     status: str  # accepted | rejected
+
+
+class ApplySuggestionRequest(BaseModel):
+    custom_replacement: Optional[str] = None
+
+
+class ApplySuggestionResponse(BaseModel):
+    finding: FindingResponse
+    applied_replacement: str
+    version_number: int
+    draft_id: UUID
+    updated_content: str
+

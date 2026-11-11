@@ -11,6 +11,7 @@ import {
   Loader2,
   GitCompare,
   ArrowLeft,
+  Zap,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -78,44 +79,56 @@ export default function VersionHistory({ draftId, isOpen, onClose }) {
     if (!compareA || !compareB) return null
 
     const changes = diffWords(compareA.content, compareB.content)
+    const additionsCount = changes.filter(part => part.added).length
+    const deletionsCount = changes.filter(part => part.removed).length
 
     return (
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <GitCompare className="w-4 h-4 text-brand-600" />
-            Comparing v{compareA.version_number} → v{compareB.version_number}
-          </h4>
+      <div className="space-y-3 bg-gray-50/70 p-4 rounded-xl border border-gray-200">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+              <GitCompare className="w-4 h-4 text-brand-600" />
+              <span>Comparing v{compareA.version_number} → v{compareB.version_number}</span>
+            </h4>
+            <div className="flex items-center gap-1.5 text-[11px] font-mono">
+              <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
+                +{additionsCount}
+              </span>
+              <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-bold border border-rose-200">
+                -{deletionsCount}
+              </span>
+            </div>
+          </div>
           <button
             onClick={() => {
               setCompareA(null)
               setCompareB(null)
               setCompareMode(false)
             }}
-            className="text-xs text-gray-500 hover:text-gray-700"
+            className="text-xs text-gray-500 hover:text-gray-700 underline font-medium"
           >
             Clear comparison
           </button>
         </div>
 
-        <div className="flex gap-2 text-[10px] text-gray-500">
+        <div className="flex gap-3 text-[11px] text-gray-600">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-3 rounded bg-rose-100 border border-rose-300" />
-            Removed
+            <span>Removed from v{compareA.version_number}</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-3 rounded bg-emerald-100 border border-emerald-300" />
-            Added
+            <span>Added in v{compareB.version_number}</span>
           </span>
         </div>
 
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-sm leading-relaxed whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
+        <div className="bg-white rounded-lg p-4 border border-gray-200 text-sm leading-relaxed whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
           {changes.map((part, i) => {
             if (part.added) {
               return (
                 <span
                   key={i}
-                  className="bg-emerald-100 text-emerald-900 border-b-2 border-emerald-300 px-0.5 rounded-sm"
+                  className="bg-emerald-100 text-emerald-900 border-b-2 border-emerald-400 px-0.5 rounded-sm font-semibold"
                 >
                   {part.value}
                 </span>
@@ -125,7 +138,7 @@ export default function VersionHistory({ draftId, isOpen, onClose }) {
               return (
                 <span
                   key={i}
-                  className="bg-rose-100 text-rose-900 line-through border-b-2 border-rose-300 px-0.5 rounded-sm"
+                  className="bg-rose-100 text-rose-900 line-through border-b-2 border-rose-400 px-0.5 rounded-sm"
                 >
                   {part.value}
                 </span>
@@ -173,29 +186,46 @@ export default function VersionHistory({ draftId, isOpen, onClose }) {
             </div>
           ) : (
             <>
-              {/* Compare mode toggle */}
-              <div className="flex items-center justify-between">
+              {/* Compare mode toggle & Quick Compare */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-gray-500">
                   {compareMode
                     ? 'Select two versions to compare changes'
                     : 'Click a version to view its content'}
                 </p>
-                <button
-                  onClick={() => {
-                    setCompareMode(!compareMode)
-                    setCompareA(null)
-                    setCompareB(null)
-                    setSelectedVersion(null)
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
-                    compareMode
-                      ? 'bg-brand-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <GitCompare className="w-3.5 h-3.5" />
-                  {compareMode ? 'Exit Compare' : 'Compare Versions'}
-                </button>
+                <div className="flex items-center gap-2">
+                  {versions.length >= 2 && !compareMode && (
+                    <button
+                      onClick={() => {
+                        setCompareMode(true)
+                        // versions are newest first (index 0 is newest, index 1 is previous)
+                        setCompareB(versions[0])
+                        setCompareA(versions[1])
+                        setSelectedVersion(null)
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 flex items-center gap-1.5 transition-colors shadow-2xs"
+                    >
+                      <Zap className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Compare Latest vs Previous</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setCompareMode(!compareMode)
+                      setCompareA(null)
+                      setCompareB(null)
+                      setSelectedVersion(null)
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                      compareMode
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <GitCompare className="w-3.5 h-3.5" />
+                    {compareMode ? 'Exit Compare' : 'Compare Versions'}
+                  </button>
+                </div>
               </div>
 
               {/* Diff view */}

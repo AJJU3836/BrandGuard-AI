@@ -27,9 +27,47 @@ import {
   FileSpreadsheet,
   FileCode,
   Eye,
-  SlidersHorizontal
+  SlidersHorizontal,
+  GitCompare,
+  ArrowRight,
+  Edit3,
+  Zap,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+
+export const getSuggestedReplacement = (suggestion, textHighlight) => {
+  if (!suggestion) return ''
+  const s = suggestion.trim()
+
+  const m1 = s.match(/replace\s+['"][^'"]*['"]\s+with\s+['"]([^'"]+)['"]/i)
+  if (m1) return m1[1].trim()
+
+  const m2 = s.match(/replace\s+(?:.*?\s+)?with\s+['"]([^'"]+)['"]/i)
+  if (m2) return m2[1].trim()
+
+  const m3 = s.match(/(?:use|consider\s+using)\s+['"]([^'"]+)['"]/i)
+  if (m3) return m3[1].trim()
+
+  const m4 = s.match(/(?:change\s+to|switch\s+to)\s+['"]([^'"]+)['"]/i)
+  if (m4) return m4[1].trim()
+
+  const quotes = s.match(/['"]([^'"]+)['"]/g)
+  if (quotes && quotes.length > 0) {
+    const cleanedQuotes = quotes.map(q => q.replace(/['"]/g, ''))
+    if (cleanedQuotes.length > 1 && textHighlight && cleanedQuotes[0].toLowerCase().includes(textHighlight.toLowerCase())) {
+      return cleanedQuotes[1].trim()
+    }
+    if (textHighlight && cleanedQuotes[0].toLowerCase() !== textHighlight.toLowerCase()) {
+      return cleanedQuotes[0].trim()
+    }
+  }
+
+  if (/^(remove|avoid|delete|omit|do not)/i.test(s)) {
+    return ''
+  }
+
+  return s.replace(/\.$/, '')
+}
 
 export default function DraftReview() {
   const { draftId } = useParams()
@@ -58,6 +96,14 @@ export default function DraftReview() {
   const [isAuditingImage, setIsAuditingImage] = useState(false)
   const [showImageAuditBox, setShowImageAuditBox] = useState(false)
   const [lastAuditedAsset, setLastAuditedAsset] = useState(null)
+
+  // 1-Click Suggestion & Interactive Visual Diff states
+  const [applyingFindingId, setApplyingFindingId] = useState(null)
+  const [customReplacements, setCustomReplacements] = useState({})
+  const [editingFindingId, setEditingFindingId] = useState(null)
+  const [interactiveHighlight, setInteractiveHighlight] = useState(true)
+  const [highlightedFindingId, setHighlightedFindingId] = useState(null)
+  const [latestAppliedVersion, setLatestAppliedVersion] = useState(null)
 
   useEffect(() => {
     fetchDraftData()
@@ -110,6 +156,93 @@ export default function DraftReview() {
     } catch (err) {
       toast.error('Failed to update suggestion status')
     }
+  }
+
+  // 1-Click Suggestion Application: rewrites draft, updates version, and marks finding accepted
+  const handleApplyFindingFix = async (finding, overrideReplacement) => {
+    try {
+      setApplyingFindingId(finding.id)
+      const replacementText = overrideReplacement !== undefined
+        ? overrideReplacement
+        : (customReplacements[finding.id] !== undefined
+            ? customReplacements[finding.id]
+            : getSuggestedReplacement(finding.suggestion, finding.text_highlight))
+
+      const res = await api.post(
+        `/workspaces/${user.workspace_id}/drafts/${draftId}/review/findings/${finding.id}/apply`,
+        { custom_replacement: replacementText }
+      )
+
+      toast.success(`Fix applied! Draft saved as Version ${res.data.version_number}`)
+      setDraft(prev => ({ ...prev, content: res.data.updated_content }))
+      setFindings(findings.map(f => f.id === finding.id ? { ...f, status: 'accepted' } : f))
+      setLatestAppliedVersion(res.data.version_number)
+      setEditingFindingId(null)
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to apply suggestion to draft')
+    } finally {
+      setApplyingFindingId(null)
+    }
+  }
+
+  // Interactive Content Renderer with Clickable Flag Highlights
+  const renderHighlightedContent = () => {
+    if (!draft?.content) return null
+    if (!interactiveHighlight) {
+      return draft.content
+    }
+
+    const openHighlights = findings.filter(
+      f => f.status === 'open' && f.text_highlight && f.text_highlight.trim().length > 0
+    )
+    if (openHighlights.length === 0) {
+      return draft.content
+    }
+
+    // Deduplicate unique text highlights and sort longest-first to match compounds first
+    const uniqueSnippets = Array.from(new Set(openHighlights.map(f => f.text_highlight.trim()))).filter(Boolean)
+    if (uniqueSnippets.length === 0) return draft.content
+
+    uniqueSnippets.sort((a, b) => b.length - a.length)
+    const regexPattern = new RegExp(`(${uniqueSnippets.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi')
+
+    const parts = draft.content.split(regexPattern)
+
+    return parts.map((part, index) => {
+      const matchingFinding = openHighlights.find(
+        f => f.text_highlight && f.text_highlight.trim().toLowerCase() === part.trim().toLowerCase()
+      )
+
+      if (matchingFinding) {
+        const isError = matchingFinding.severity === 'error'
+        const isWarning = matchingFinding.severity === 'warning'
+        const isSelected = highlightedFindingId === matchingFinding.id
+
+        return (
+          <mark
+            key={index}
+            onClick={() => {
+              setHighlightedFindingId(matchingFinding.id)
+              const el = document.getElementById(`finding-card-${matchingFinding.id}`)
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              }
+            }}
+            title={`Click to inspect finding: ${matchingFinding.category} (${matchingFinding.severity})`}
+            className={`cursor-pointer px-1 py-0.5 rounded font-medium transition-all duration-200 ${
+              isError
+                ? 'bg-rose-100 text-rose-950 border-b-2 border-rose-500 hover:bg-rose-200'
+                : isWarning
+                ? 'bg-amber-100 text-amber-950 border-b-2 border-amber-500 hover:bg-amber-200'
+                : 'bg-purple-100 text-purple-950 border-b-2 border-purple-500 hover:bg-purple-200'
+            } ${isSelected ? 'ring-2 ring-brand-600 shadow-sm' : ''}`}
+          >
+            {part}
+          </mark>
+        )
+      }
+      return <span key={index}>{part}</span>
+    })
   }
 
   const handleUpdateDraftStatus = async (newStatus) => {
@@ -418,19 +551,60 @@ export default function DraftReview() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column (Content, Visual Asset Audit, Comments) */}
         <div className="lg:col-span-6 space-y-6">
-          {/* Submitted Content Display */}
+          {/* Submitted Content Display with Interactive Flags & Live Diff */}
           <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs space-y-3">
-            <div className="flex items-center justify-between border-b pb-2.5">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                Submitted Content Body
-              </span>
-              <span className="text-xs text-gray-400 font-mono">
-                {draft.content.length} characters
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                  Submitted Content Body
+                </span>
+                {latestAppliedVersion && (
+                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
+                    v{latestAppliedVersion} Active
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setInteractiveHighlight(!interactiveHighlight)}
+                  className={`text-[11px] font-semibold flex items-center gap-1 px-2.5 py-1 rounded-lg border transition-colors ${
+                    interactiveHighlight
+                      ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-2xs'
+                      : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
+                  }`}
+                  title="Toggle visual highlights for open findings directly in the text"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>{interactiveHighlight ? 'Visual Flags Active' : 'Plain Text'}</span>
+                </button>
+                <span className="text-xs text-gray-400 font-mono">
+                  {draft.content.length} chars
+                </span>
+              </div>
             </div>
 
+            {/* Notification banner when a suggestion was applied */}
+            {latestAppliedVersion && (
+              <div className="p-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/90 rounded-xl flex items-center justify-between text-xs text-emerald-950 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <span>
+                    <strong>Version {latestAppliedVersion} Live:</strong> Content was updated via 1-Click Fix.
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowHistory(true)}
+                  className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200 rounded-lg text-[11px] flex items-center gap-1.5 transition-colors shadow-2xs"
+                >
+                  <GitCompare className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>View Word Diff</span>
+                </button>
+              </div>
+            )}
+
             <div className="bg-gray-50/80 rounded-xl p-4 sm:p-5 border border-gray-100 text-gray-800 text-sm leading-relaxed whitespace-pre-wrap font-sans selection:bg-brand-100">
-              {draft.content}
+              {renderHighlightedContent()}
             </div>
           </div>
 
@@ -719,8 +893,11 @@ export default function DraftReview() {
                 return (
                   <div
                     key={f.id}
+                    id={`finding-card-${f.id}`}
                     className={`bg-white rounded-2xl p-5 border shadow-xs transition-all ${
-                      isResolved
+                      highlightedFindingId === f.id
+                        ? 'ring-2 ring-brand-500 border-brand-400 shadow-md'
+                        : isResolved
                         ? 'opacity-65 border-gray-200 bg-gray-50/60'
                         : 'border-gray-200/90 hover:border-brand-300'
                     }`}
@@ -798,8 +975,64 @@ export default function DraftReview() {
                       </div>
                     )}
 
-                    {/* Suggestion Fix */}
-                    {f.suggestion && (
+                    {/* Interactive Visual Diff & Proposed Rewrite */}
+                    {f.text_highlight && f.suggestion ? (
+                      <div className="mb-3 bg-gray-50/90 border border-gray-200/90 rounded-xl p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <GitCompare className="w-3.5 h-3.5 text-brand-600" />
+                            <span>Visual Diff & Rewrite</span>
+                          </span>
+                          {f.status === 'open' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingFindingId(editingFindingId === f.id ? null : f.id)
+                                if (customReplacements[f.id] === undefined) {
+                                  setCustomReplacements(prev => ({
+                                    ...prev,
+                                    [f.id]: getSuggestedReplacement(f.suggestion, f.text_highlight)
+                                  }))
+                                }
+                              }}
+                              className="text-[11px] font-semibold text-brand-600 hover:text-brand-800 transition-colors flex items-center gap-1"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                              <span>{editingFindingId === f.id ? 'Cancel' : 'Edit replacement'}</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Strikethrough Old Text -> Emerald Highlight New Text */}
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-mono bg-white p-2.5 rounded-lg border border-gray-200 shadow-2xs">
+                          <span className="line-through bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded font-medium">
+                            "{f.text_highlight}"
+                          </span>
+                          <ArrowRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-bold">
+                            {customReplacements[f.id] !== undefined
+                              ? (customReplacements[f.id] || <span className="italic text-gray-400 font-normal">(Remove text)</span>)
+                              : (getSuggestedReplacement(f.suggestion, f.text_highlight) || <span className="italic text-gray-400 font-normal">(Remove text)</span>)}
+                          </span>
+                        </div>
+
+                        {/* Inline Customizer Input */}
+                        {editingFindingId === f.id && (
+                          <div className="pt-1.5 space-y-1">
+                            <label className="text-[10px] font-bold text-gray-500 block uppercase">
+                              Customize Replacement Value:
+                            </label>
+                            <input
+                              type="text"
+                              value={customReplacements[f.id] !== undefined ? customReplacements[f.id] : getSuggestedReplacement(f.suggestion, f.text_highlight)}
+                              onChange={(e) => setCustomReplacements({ ...customReplacements, [f.id]: e.target.value })}
+                              className="w-full px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                              placeholder="Type custom replacement (empty removes flagged text)..."
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ) : f.suggestion ? (
                       <div className="mb-3 bg-emerald-50/60 border border-emerald-200 rounded-xl p-2.5 text-xs text-emerald-950 space-y-1">
                         <span className="font-bold block text-[10px] text-emerald-800 uppercase tracking-wider">
                           Proposed Fix (Creator Control)
@@ -808,25 +1041,42 @@ export default function DraftReview() {
                           {f.suggestion}
                         </p>
                       </div>
-                    )}
+                    ) : null}
 
                     {/* Action buttons (Accept/Dismiss) */}
-                    {f.status === 'open' && f.suggestion && (
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                    {f.status === 'open' && (
+                      <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-gray-100">
                         <button
                           onClick={() => handleUpdateFindingStatus(f.id, 'rejected')}
-                          className="px-2.5 py-1 text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center gap-1 transition-colors"
+                          className="px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg flex items-center gap-1 transition-colors"
                         >
                           <X className="w-3.5 h-3.5 text-gray-400" />
                           <span>Dismiss</span>
                         </button>
-                        <button
-                          onClick={() => handleUpdateFindingStatus(f.id, 'accepted')}
-                          className="px-3 py-1 text-xs font-semibold bg-brand-600 text-white rounded-lg hover:bg-brand-700 flex items-center gap-1 shadow-2xs transition-colors"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Accept Fix</span>
-                        </button>
+
+                        {/* 1-Click Suggestion Application if text highlight exists */}
+                        {f.text_highlight && f.suggestion ? (
+                          <button
+                            onClick={() => handleApplyFindingFix(f)}
+                            disabled={applyingFindingId === f.id}
+                            className="px-3.5 py-1.5 text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors disabled:opacity-50"
+                          >
+                            {applyingFindingId === f.id ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Zap className="w-3.5 h-3.5 text-amber-300" />
+                            )}
+                            <span>{applyingFindingId === f.id ? 'Applying to Draft...' : '⚡ Accept & Apply Fix'}</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleUpdateFindingStatus(f.id, 'accepted')}
+                            className="px-3 py-1.5 text-xs font-semibold bg-brand-600 text-white rounded-lg hover:bg-brand-700 flex items-center gap-1 shadow-2xs transition-colors"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Mark Resolved</span>
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

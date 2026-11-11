@@ -2,6 +2,7 @@
 
 import csv
 import io
+import re
 from typing import List, Optional
 from uuid import UUID
 
@@ -13,9 +14,15 @@ from app.core.security import get_current_user
 from app.models.audit_log import AuditLog
 from app.models.brand_kit import BrandKit
 from app.models.draft import Draft
+from app.models.draft_version import DraftVersion
 from app.models.finding import Finding
 from app.models.user import User
-from app.schemas.finding import FindingResponse, FindingStatusUpdate
+from app.schemas.finding import (
+    FindingResponse,
+    FindingStatusUpdate,
+    ApplySuggestionRequest,
+    ApplySuggestionResponse,
+)
 from app.services.ai_engine import ai_review, ai_image_review
 from app.services.brand_kit_service import get_guideline_chunks, retrieve_relevant_chunks
 from app.services.rule_engine import run_all_checks
@@ -196,6 +203,152 @@ def update_finding_status(
     db.refresh(finding)
 
     return finding
+
+
+def extract_clean_replacement(suggestion: str, text_highlight: Optional[str] = None) -> str:
+    """Extract clean replacement text from a suggestion string."""
+    if not suggestion:
+        return ""
+    s = suggestion.strip()
+
+    # Pattern 1: Replace "X" with "Y" / Replace 'X' with 'Y'
+    m1 = re.search(r'replace\s+[\'"][^\'"]*[\'"]\s+with\s+[\'"]([^\'"]+)[\'"]', s, re.IGNORECASE)
+    if m1:
+        return m1.group(1).strip()
+
+    # Pattern 2: Replace with "Y"
+    m2 = re.search(r'replace\s+(?:.*?\s+)?with\s+[\'"]([^\'"]+)[\'"]', s, re.IGNORECASE)
+    if m2:
+        return m2.group(1).strip()
+
+    # Pattern 3: Use "Y" instead / Consider using "Y"
+    m3 = re.search(r'(?:use|consider\s+using)\s+[\'"]([^\'"]+)[\'"]', s, re.IGNORECASE)
+    if m3:
+        return m3.group(1).strip()
+
+    # Pattern 4: Change to "Y" / Switch to "Y"
+    m4 = re.search(r'(?:change\s+to|switch\s+to)\s+[\'"]([^\'"]+)[\'"]', s, re.IGNORECASE)
+    if m4:
+        return m4.group(1).strip()
+
+    # Pattern 5: Entire string wrapped in quotes
+    m5 = re.match(r'^[\'"]([^\'"]+)[\'"]$', s)
+    if m5:
+        return m5.group(1).strip()
+
+    # Pattern 6: Multiple quotes: check if text_highlight is in quote 0, and quote 1 has replacement
+    quotes = re.findall(r'[\'"]([^\'"]+)[\'"]', s)
+    if quotes:
+        if len(quotes) > 1 and text_highlight and text_highlight.lower() in quotes[0].lower():
+            return quotes[1].strip()
+        if text_highlight and quotes[0].strip().lower() != text_highlight.strip().lower():
+            return quotes[0].strip()
+
+    # Pattern 7: If suggestion starts with instructional words like remove or delete
+    if s.lower().startswith(("remove", "avoid", "delete", "omit", "do not")):
+        return ""
+
+    # Fallback: remove trailing period
+    return s.rstrip(".")
+
+
+@router.post("/findings/{finding_id}/apply", response_model=ApplySuggestionResponse)
+def apply_finding_suggestion(
+    workspace_id: UUID,
+    draft_id: UUID,
+    finding_id: UUID,
+    payload: Optional[ApplySuggestionRequest] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    1-Click Suggestion Application:
+    Applies the suggested fix or custom replacement to the draft content,
+    creates a new version in DraftVersion with a clear audit change summary,
+    marks the finding as accepted, logs the audit trail, and returns the updated state.
+    """
+    draft = db.query(Draft).filter(
+        Draft.id == draft_id,
+        Draft.workspace_id == workspace_id,
+    ).first()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found.")
+
+    finding = db.query(Finding).filter(
+        Finding.id == finding_id,
+        Finding.draft_id == draft_id,
+    ).first()
+    if not finding:
+        raise HTTPException(status_code=404, detail="Finding not found.")
+
+    replacement = ""
+    if payload and payload.custom_replacement is not None:
+        replacement = payload.custom_replacement
+    else:
+        replacement = extract_clean_replacement(finding.suggestion or "", finding.text_highlight)
+
+    # Apply replacement into draft content if text_highlight exists
+    if finding.text_highlight:
+        if finding.text_highlight in draft.content:
+            draft.content = draft.content.replace(finding.text_highlight, replacement, 1)
+        else:
+            # Case-insensitive replace fallback
+            pattern = re.compile(re.escape(finding.text_highlight), re.IGNORECASE)
+            draft.content = pattern.sub(replacement, draft.content, count=1)
+
+    # Determine next version number
+    max_ver = (
+        db.query(DraftVersion.version_number)
+        .filter(DraftVersion.draft_id == draft_id)
+        .order_by(DraftVersion.version_number.desc())
+        .first()
+    )
+    next_ver = (max_ver[0] + 1) if max_ver else 1
+
+    summary_desc = (
+        f"Applied {finding.category} fix: '{finding.text_highlight}' → '{replacement}'"
+        if finding.text_highlight
+        else f"Applied fix for {finding.category}: '{replacement}'"
+    )
+
+    new_version = DraftVersion(
+        draft_id=draft_id,
+        version_number=next_ver,
+        content=draft.content,
+        change_summary=summary_desc,
+    )
+    db.add(new_version)
+
+    # Mark finding as accepted
+    finding.status = "accepted"
+
+    # Audit log
+    log = AuditLog(
+        workspace_id=workspace_id,
+        user_id=current_user.id,
+        action="finding_applied_to_draft",
+        entity_type="draft",
+        entity_id=draft_id,
+        details={
+            "finding_id": str(finding.id),
+            "category": finding.category,
+            "text_highlight": finding.text_highlight,
+            "applied_replacement": replacement,
+            "version_number": next_ver,
+        },
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(draft)
+    db.refresh(finding)
+
+    return ApplySuggestionResponse(
+        finding=finding,
+        applied_replacement=replacement,
+        version_number=next_ver,
+        draft_id=draft.id,
+        updated_content=draft.content,
+    )
 
 
 # ── Image Review & Visual Compliance ────────────────────────────────────
