@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
+import { diffWords } from 'diff'
 import VersionHistory from '../components/VersionHistory'
 import { 
   ArrowLeft, 
@@ -98,6 +99,8 @@ export default function DraftReview() {
   const [lastAuditedAsset, setLastAuditedAsset] = useState(null)
 
   // 1-Click Suggestion & Interactive Visual Diff states
+  const [versions, setVersions] = useState([])
+  const [contentViewMode, setContentViewMode] = useState('editor') // 'editor' or 'side_by_side'
   const [applyingFindingId, setApplyingFindingId] = useState(null)
   const [customReplacements, setCustomReplacements] = useState({})
   const [editingFindingId, setEditingFindingId] = useState(null)
@@ -115,15 +118,17 @@ export default function DraftReview() {
       const wsId = user?.workspace_id
       if (!wsId) return
 
-      const [draftRes, findingsRes, commentsRes] = await Promise.all([
+      const [draftRes, findingsRes, commentsRes, versionsRes] = await Promise.all([
         api.get(`/workspaces/${wsId}/drafts/${draftId}`),
         api.get(`/workspaces/${wsId}/drafts/${draftId}/review/findings`),
         api.get(`/workspaces/${wsId}/drafts/${draftId}/comments`),
+        api.get(`/workspaces/${wsId}/drafts/${draftId}/versions`),
       ])
 
       setDraft(draftRes.data)
       setFindings(findingsRes.data)
       setComments(commentsRes.data)
+      setVersions(versionsRes.data || [])
     } catch (err) {
       toast.error('Failed to load draft review data')
       console.error(err)
@@ -173,11 +178,18 @@ export default function DraftReview() {
         { custom_replacement: replacementText }
       )
 
-      toast.success(`Fix applied! Draft saved as Version ${res.data.version_number}`)
+      toast.success(`Suggestion accepted! Auto-replaced in editor & saved as Version ${res.data.version_number}`)
       setDraft(prev => ({ ...prev, content: res.data.updated_content }))
       setFindings(findings.map(f => f.id === finding.id ? { ...f, status: 'accepted' } : f))
       setLatestAppliedVersion(res.data.version_number)
       setEditingFindingId(null)
+
+      try {
+        const vRes = await api.get(`/workspaces/${user.workspace_id}/drafts/${draftId}/versions`)
+        setVersions(vRes.data || [])
+      } catch (vErr) {
+        console.error('Failed to reload versions:', vErr)
+      }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to apply suggestion to draft')
     } finally {
@@ -551,33 +563,70 @@ export default function DraftReview() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column (Content, Visual Asset Audit, Comments) */}
         <div className="lg:col-span-6 space-y-6">
-          {/* Submitted Content Display with Interactive Flags & Live Diff */}
+          {/* Submitted Content Display with Interactive Flags & Live Side-by-Side Diff */}
           <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2.5">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                   Submitted Content Body
                 </span>
-                {latestAppliedVersion && (
+                {latestAppliedVersion ? (
                   <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
                     v{latestAppliedVersion} Active
                   </span>
+                ) : (
+                  <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
+                    v{versions[0]?.version_number || 1}
+                  </span>
                 )}
               </div>
+
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setInteractiveHighlight(!interactiveHighlight)}
-                  className={`text-[11px] font-semibold flex items-center gap-1 px-2.5 py-1 rounded-lg border transition-colors ${
-                    interactiveHighlight
-                      ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-2xs'
-                      : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
-                  }`}
-                  title="Toggle visual highlights for open findings directly in the text"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>{interactiveHighlight ? 'Visual Flags Active' : 'Plain Text'}</span>
-                </button>
+                {/* View Switcher: Live Editor vs Side-by-Side Diff */}
+                {versions.length >= 2 && (
+                  <div className="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setContentViewMode('editor')}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                        contentViewMode === 'editor'
+                          ? 'bg-white text-gray-900 shadow-2xs'
+                          : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                    >
+                      Live Editor
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setContentViewMode('side_by_side')}
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all flex items-center gap-1 ${
+                        contentViewMode === 'side_by_side'
+                          ? 'bg-brand-600 text-white shadow-2xs'
+                          : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                    >
+                      <GitCompare className="w-3 h-3" />
+                      <span>Side-by-Side Diff</span>
+                    </button>
+                  </div>
+                )}
+
+                {contentViewMode === 'editor' && (
+                  <button
+                    type="button"
+                    onClick={() => setInteractiveHighlight(!interactiveHighlight)}
+                    className={`text-[11px] font-semibold flex items-center gap-1 px-2.5 py-1 rounded-lg border transition-colors ${
+                      interactiveHighlight
+                        ? 'bg-brand-50 text-brand-700 border-brand-200 shadow-2xs'
+                        : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
+                    }`}
+                    title="Toggle visual highlights for open findings directly in the text"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>{interactiveHighlight ? 'Visual Flags Active' : 'Plain Text'}</span>
+                  </button>
+                )}
+
                 <span className="text-xs text-gray-400 font-mono">
                   {draft.content.length} chars
                 </span>
@@ -590,22 +639,120 @@ export default function DraftReview() {
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                   <span>
-                    <strong>Version {latestAppliedVersion} Live:</strong> Content was updated via 1-Click Fix.
+                    <strong>Version {latestAppliedVersion} Live:</strong> Suggestion auto-replaced text directly in editor.
                   </span>
                 </div>
-                <button
-                  onClick={() => setShowHistory(true)}
-                  className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200 rounded-lg text-[11px] flex items-center gap-1.5 transition-colors shadow-2xs"
-                >
-                  <GitCompare className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>View Word Diff</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setContentViewMode(contentViewMode === 'side_by_side' ? 'editor' : 'side_by_side')}
+                    className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200 rounded-lg text-[11px] flex items-center gap-1 transition-colors shadow-2xs"
+                  >
+                    <GitCompare className="w-3 h-3 text-emerald-600" />
+                    <span>{contentViewMode === 'side_by_side' ? 'Switch to Editor' : 'Side-by-Side Diff'}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowHistory(true)}
+                    className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 underline"
+                  >
+                    All Versions ({versions.length})
+                  </button>
+                </div>
               </div>
             )}
 
-            <div className="bg-gray-50/80 rounded-xl p-4 sm:p-5 border border-gray-100 text-gray-800 text-sm leading-relaxed whitespace-pre-wrap font-sans selection:bg-brand-100">
-              {renderHighlightedContent()}
-            </div>
+            {/* Content Display: Side-by-Side Diff vs Live Editor View */}
+            {contentViewMode === 'side_by_side' && versions.length >= 2 ? (
+              <div className="space-y-2.5">
+                {(() => {
+                  const prevVer = versions[1]
+                  const currVer = versions[0]
+                  const diffChanges = diffWords(prevVer?.content || '', draft?.content || '')
+                  const additions = diffChanges.filter(p => p.added).length
+                  const deletions = diffChanges.filter(p => p.removed).length
+
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs text-gray-600 bg-gray-50/80 px-3 py-2 rounded-lg border border-gray-200">
+                        <span className="font-semibold text-gray-800 flex items-center gap-1.5">
+                          <GitCompare className="w-3.5 h-3.5 text-brand-600" />
+                          <span>Comparing v{prevVer?.version_number} → v{currVer?.version_number} (Word-by-word)</span>
+                        </span>
+                        <div className="flex items-center gap-2 text-[11px] font-mono">
+                          <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-bold border border-rose-200">
+                            -{deletions} deletions
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
+                            +{additions} additions
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {/* Left Column: Previous Version (Before) */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs px-1">
+                            <span className="font-bold text-gray-700">
+                              Previous v{prevVer?.version_number} (Before)
+                            </span>
+                            <span className="text-[10px] text-gray-400">
+                              {prevVer?.change_summary || 'Original'}
+                            </span>
+                          </div>
+                          <div className="bg-gray-50/90 rounded-xl p-4 border border-gray-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-mono min-h-60 max-h-96 overflow-y-auto shadow-2xs">
+                            {diffChanges.map((part, i) => {
+                              if (part.added) return null
+                              if (part.removed) {
+                                return (
+                                  <mark
+                                    key={i}
+                                    className="bg-rose-100 text-rose-900 line-through border-b border-rose-400 px-0.5 rounded font-semibold"
+                                  >
+                                    {part.value}
+                                  </mark>
+                                )
+                              }
+                              return <span key={i}>{part.value}</span>
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Right Column: Active Version (After / Auto-Replaced) */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs px-1">
+                            <span className="font-bold text-emerald-800">
+                              Active v{currVer?.version_number} (After Auto-Replace)
+                            </span>
+                            <span className="text-[10px] text-emerald-600 font-medium">
+                              Active in Editor
+                            </span>
+                          </div>
+                          <div className="bg-emerald-50/20 rounded-xl p-4 border border-emerald-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-mono min-h-60 max-h-96 overflow-y-auto shadow-2xs">
+                            {diffChanges.map((part, i) => {
+                              if (part.removed) return null
+                              if (part.added) {
+                                return (
+                                  <mark
+                                    key={i}
+                                    className="bg-emerald-100 text-emerald-950 border-b border-emerald-500 font-bold px-0.5 rounded"
+                                  >
+                                    {part.value}
+                                  </mark>
+                                )
+                              }
+                              return <span key={i}>{part.value}</span>
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
+            ) : (
+              <div className="bg-gray-50/80 rounded-xl p-4 sm:p-5 border border-gray-100 text-gray-800 text-sm leading-relaxed whitespace-pre-wrap font-sans selection:bg-brand-100">
+                {renderHighlightedContent()}
+              </div>
+            )}
           </div>
 
           {/* Image & Visual Asset Compliance Module */}
@@ -1060,13 +1207,14 @@ export default function DraftReview() {
                             onClick={() => handleApplyFindingFix(f)}
                             disabled={applyingFindingId === f.id}
                             className="px-3.5 py-1.5 text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors disabled:opacity-50"
+                            title="Auto-replaces violative text directly in the editor and creates a new version"
                           >
                             {applyingFindingId === f.id ? (
                               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                             ) : (
                               <Zap className="w-3.5 h-3.5 text-amber-300" />
                             )}
-                            <span>{applyingFindingId === f.id ? 'Applying to Draft...' : '⚡ Accept & Apply Fix'}</span>
+                            <span>{applyingFindingId === f.id ? 'Auto-replacing in editor...' : 'Accept Suggestion'}</span>
                           </button>
                         ) : (
                           <button

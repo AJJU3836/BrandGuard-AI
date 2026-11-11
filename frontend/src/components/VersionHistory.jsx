@@ -32,6 +32,7 @@ export default function VersionHistory({ draftId, isOpen, onClose }) {
   const [compareMode, setCompareMode] = useState(false)
   const [compareA, setCompareA] = useState(null) // older
   const [compareB, setCompareB] = useState(null) // newer
+  const [diffViewMode, setDiffViewMode] = useState('split') // 'split' (side-by-side) or 'unified'
 
   useEffect(() => {
     if (isOpen && draftId) {
@@ -83,8 +84,8 @@ export default function VersionHistory({ draftId, isOpen, onClose }) {
     const deletionsCount = changes.filter(part => part.removed).length
 
     return (
-      <div className="space-y-3 bg-gray-50/70 p-4 rounded-xl border border-gray-200">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="space-y-3 bg-gray-50/80 p-4 rounded-xl border border-gray-200 shadow-2xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 pb-3">
           <div className="flex items-center gap-2">
             <h4 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
               <GitCompare className="w-4 h-4 text-brand-600" />
@@ -92,61 +93,156 @@ export default function VersionHistory({ draftId, isOpen, onClose }) {
             </h4>
             <div className="flex items-center gap-1.5 text-[11px] font-mono">
               <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
-                +{additionsCount}
+                +{additionsCount} additions
               </span>
               <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-bold border border-rose-200">
-                -{deletionsCount}
+                -{deletionsCount} deletions
               </span>
             </div>
           </div>
-          <button
-            onClick={() => {
-              setCompareA(null)
-              setCompareB(null)
-              setCompareMode(false)
-            }}
-            className="text-xs text-gray-500 hover:text-gray-700 underline font-medium"
-          >
-            Clear comparison
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Split Side-by-Side vs Unified Toggle */}
+            <div className="flex items-center bg-white p-0.5 rounded-lg border border-gray-200 text-xs">
+              <button
+                type="button"
+                onClick={() => setDiffViewMode('split')}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                  diffViewMode === 'split'
+                    ? 'bg-brand-600 text-white shadow-2xs'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Side-by-Side
+              </button>
+              <button
+                type="button"
+                onClick={() => setDiffViewMode('unified')}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${
+                  diffViewMode === 'unified'
+                    ? 'bg-brand-600 text-white shadow-2xs'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Unified
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                setCompareA(null)
+                setCompareB(null)
+                setCompareMode(false)
+              }}
+              className="text-xs text-gray-500 hover:text-gray-700 underline font-medium ml-1"
+            >
+              Clear
+            </button>
+          </div>
         </div>
 
-        <div className="flex gap-3 text-[11px] text-gray-600">
-          <span className="flex items-center gap-1">
+        {/* Legend */}
+        <div className="flex gap-4 text-[11px] text-gray-600">
+          <span className="flex items-center gap-1.5">
             <span className="inline-block w-3 h-3 rounded bg-rose-100 border border-rose-300" />
             <span>Removed from v{compareA.version_number}</span>
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1.5">
             <span className="inline-block w-3 h-3 rounded bg-emerald-100 border border-emerald-300" />
             <span>Added in v{compareB.version_number}</span>
           </span>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-gray-200 text-sm leading-relaxed whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
-          {changes.map((part, i) => {
-            if (part.added) {
-              return (
-                <span
-                  key={i}
-                  className="bg-emerald-100 text-emerald-900 border-b-2 border-emerald-400 px-0.5 rounded-sm font-semibold"
-                >
-                  {part.value}
+        {/* Word Diff Body */}
+        {diffViewMode === 'split' ? (
+          /* Side-by-Side Split Diff */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            {/* Left: Previous Version with deletions */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between px-1 text-xs">
+                <span className="font-bold text-gray-800 flex items-center gap-1">
+                  <span>v{compareA.version_number}</span>
+                  <span className="text-gray-400 font-normal">(Original Before)</span>
                 </span>
-              )
-            }
-            if (part.removed) {
-              return (
-                <span
-                  key={i}
-                  className="bg-rose-100 text-rose-900 line-through border-b-2 border-rose-400 px-0.5 rounded-sm"
-                >
-                  {part.value}
+                <span className="text-[10px] font-mono bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded font-bold">
+                  -{deletionsCount}
                 </span>
-              )
-            }
-            return <span key={i}>{part.value}</span>
-          })}
-        </div>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-gray-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-mono min-h-64 max-h-96 overflow-y-auto shadow-2xs">
+                {changes.map((part, i) => {
+                  if (part.added) return null // omitted from original
+                  if (part.removed) {
+                    return (
+                      <mark
+                        key={i}
+                        className="bg-rose-100 text-rose-900 line-through border-b border-rose-400 px-0.5 rounded font-semibold"
+                      >
+                        {part.value}
+                      </mark>
+                    )
+                  }
+                  return <span key={i}>{part.value}</span>
+                })}
+              </div>
+            </div>
+
+            {/* Right: Revised Version with additions */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between px-1 text-xs">
+                <span className="font-bold text-gray-800 flex items-center gap-1">
+                  <span>v{compareB.version_number}</span>
+                  <span className="text-gray-400 font-normal">(Revised After)</span>
+                </span>
+                <span className="text-[10px] font-mono bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
+                  +{additionsCount}
+                </span>
+              </div>
+              <div className="bg-white rounded-xl p-4 border border-gray-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-mono min-h-64 max-h-96 overflow-y-auto shadow-2xs">
+                {changes.map((part, i) => {
+                  if (part.removed) return null // omitted from revised
+                  if (part.added) {
+                    return (
+                      <mark
+                        key={i}
+                        className="bg-emerald-100 text-emerald-950 border-b border-emerald-500 font-bold px-0.5 rounded"
+                      >
+                        {part.value}
+                      </mark>
+                    )
+                  }
+                  return <span key={i}>{part.value}</span>
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Unified Diff View */
+          <div className="bg-white rounded-xl p-4 border border-gray-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-mono max-h-96 overflow-y-auto shadow-2xs">
+            {changes.map((part, i) => {
+              if (part.added) {
+                return (
+                  <span
+                    key={i}
+                    className="bg-emerald-100 text-emerald-900 border-b-2 border-emerald-400 px-0.5 rounded-sm font-semibold"
+                  >
+                    {part.value}
+                  </span>
+                )
+              }
+              if (part.removed) {
+                return (
+                  <span
+                    key={i}
+                    className="bg-rose-100 text-rose-900 line-through border-b-2 border-rose-400 px-0.5 rounded-sm"
+                  >
+                    {part.value}
+                  </span>
+                )
+              }
+              return <span key={i}>{part.value}</span>
+            })}
+          </div>
+        )}
       </div>
     )
   }
@@ -155,7 +251,7 @@ export default function VersionHistory({ draftId, isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-gray-200">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[88vh] flex flex-col overflow-hidden border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50/80">
           <div className="flex items-center gap-2.5">
