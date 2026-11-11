@@ -224,14 +224,27 @@ async def review_image(
 
     brand_kit = db.query(BrandKit).filter(BrandKit.workspace_id == workspace_id).first()
     brand_palette = brand_kit.color_palette if brand_kit else []
+    brand_name = brand_kit.name if brand_kit else "BrandGuard AI"
+    visual_rules = brand_kit.tone_rules if brand_kit else None
 
     target_name = (file.filename if file and file.filename else None) or image_name or "Uploaded-Asset.png"
 
-    # Execute image AI review
+    # Extract image binary data and mime-type if uploaded
+    image_bytes = None
+    mime_type = "image/png"
+    if file:
+        image_bytes = await file.read()
+        mime_type = file.content_type or "image/png"
+
+    # Execute Multimodal Gemini Vision + WCAG Accessibility Review
     visual_findings_raw = await ai_image_review(
         image_url_or_name=target_name,
+        image_bytes=image_bytes,
+        mime_type=mime_type,
         brand_palette=brand_palette,
         alt_text=alt_text,
+        visual_rules=visual_rules,
+        brand_name=brand_name,
     )
 
     stored = []
@@ -259,10 +272,12 @@ async def review_image(
         entity_id=draft_id,
         details={
             "asset_name": target_name,
+            "file_size_bytes": len(image_bytes) if image_bytes else 0,
+            "mime_type": mime_type,
             "alt_text_provided": bool(alt_text),
             "findings_count": len(stored),
         },
-        ai_service_used="brandguard_vision_accessibility_engine",
+        ai_service_used="gemini_vision_multimodal_accessibility_engine",
     )
     db.add(log)
     db.commit()

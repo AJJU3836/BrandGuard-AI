@@ -5,11 +5,20 @@ Handles LLM-based brand review (grounded in retrieved brand guidelines, tone rul
 and approved facts) using Gemini or OpenAI, with a built-in semantic analyzer fallback.
 """
 
+import base64
+import io
 import json
+import math
 import os
 import re
 from typing import Any
 import httpx
+
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
 
 from app.core.config import get_settings
 
@@ -348,28 +357,232 @@ async def ai_review(
     )
 
 
-async def ai_image_review(
-    image_url_or_name: str,
+def _rel_luminance(rgb: tuple[int, int, int]) -> float:
+    """Calculate relative luminance according to WCAG 2.1 standard."""
+    def to_linear(c: int) -> float:
+        v = c / 255.0
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = [to_linear(x) for x in rgb]
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _contrast_ratio(rgb1: tuple[int, int, int], rgb2: tuple[int, int, int]) -> float:
+    """Calculate contrast ratio between two RGB colors (1.0:1 to 21.0:1)."""
+    l1 = _rel_luminance(rgb1)
+    l2 = _rel_luminance(rgb2)
+    bright, dark = max(l1, l2), min(l1, l2)
+    return (bright + 0.05) / (dark + 0.05)
+
+
+def _hex_to_rgb(hex_str: str) -> tuple[int, int, int]:
+    """Convert hex string (e.g. #1E40AF) to RGB tuple."""
+    hex_str = hex_str.lstrip("#")
+    if len(hex_str) == 3:
+        hex_str = "".join(c * 2 for c in hex_str)
+    return tuple(int(hex_str[i:i+2], 16) for i in (0, 2, 4))
+
+
+def _color_distance(rgb1: tuple[int, int, int], rgb2: tuple[int, int, int]) -> float:
+    """Euclidean distance between two RGB colors."""
+    return math.sqrt(sum((a - b) ** 2 for a, b in zip(rgb1, rgb2)))
+
+
+async def _call_gemini_vision_api(
+    image_bytes: bytes,
+    mime_type: str,
+    brand_palette: list[str] | None,
+    alt_text: str | None,
+    visual_rules: list[str] | None,
+    brand_name: str,
+    image_name: str,
+    api_key: str,
+    model: str = "gemini-2.5-flash",
+) -> list[dict[str, Any]] | None:
+    """
+    Call Google Gemini Vision Multimodal REST endpoint with image payload and structured JSON output.
+    """
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+
+    palette_desc = ", ".join(brand_palette) if brand_palette else "#1E40AF (Primary Blue), #2563EB (Accent Blue), #10B981 (Success Green)"
+    rules_desc = "; ".join(visual_rules) if visual_rules else "Maintain 10% logo padding, avoid unapproved superlatives, adhere to WCAG 2.1 AA 4.5:1 contrast."
+
+    system_instruction = (
+        "You are BrandGuard AI Multimodal Vision & Accessibility Auditor.\n"
+        "Analyze marketing assets and graphics for enterprise brand compliance and WCAG 2.1 AA accessibility.\n"
+        f"Brand Identity: '{brand_name}'\n"
+        f"Approved Brand Palette Hexes: {palette_desc}\n"
+        f"Visual Rules: {rules_desc}\n\n"
+        "Examine the image directly and evaluate:\n"
+        "1. WCAG 2.1 AA Contrast (1.4.3): Calculate text-to-background contrast ratio for text overlays or buttons. Flag if ratio is below 4.5:1 (or 3:1 for large 18pt+ text).\n"
+        "2. Color Palette Alignment: Identify dominant colors in the visual. Flag any severe clashes or unapproved neon/harsh tones with estimated hex codes.\n"
+        "3. Brand Logo Placement & Integrity: Check for distortion, stretching, insufficient isolation padding (< 10%), or placement on low-contrast backgrounds.\n"
+        "4. Alt-Text Accessibility (1.1.1): Compare provided alt-text against the visual. If missing, weak, or inaccurate, provide an exact recommended descriptive alt-text in the suggestion field.\n"
+        "5. Visual Brand Safety: Flag low resolution, pixelation, unapproved claim badges (e.g. '100% Guaranteed', '#1 in India'), or competitor logos.\n\n"
+        "Output ONLY a JSON array of finding objects with these fields:\n"
+        "- severity: 'error' | 'warning' | 'info'\n"
+        "- category: 'visual' | 'accessibility'\n"
+        "- text_highlight: short label of the visual element (e.g., 'Hero Text Overlay', 'Banner Background', 'Logo Padding', 'Alt-Text Description')\n"
+        "- explanation: clear explanation of the issue with measured contrast or color details\n"
+        "- guideline_source: name of the specific standard (e.g., 'WCAG 2.1 AA (1.4.3) Contrast Minimum', 'Visual Identity → Approved Palette', 'WCAG 2.1 AA (1.1.1) Alt-Text Quality')\n"
+        "- suggestion: concrete, actionable correction for the creator/designer\n"
+        "- confidence: float from 0.85 to 1.0\n"
+        "If the image is 100% compliant, return an empty JSON array []."
+    )
+
+    user_text = (
+        f"ASSET NAME: {image_name}\n"
+        f"PROVIDED ALT-TEXT: \"{alt_text or '[No Alt-Text Provided]'}\"\n\n"
+        "Please conduct a comprehensive visual compliance and accessibility audit on this image."
+    )
+
+    b64_image = base64.b64encode(image_bytes).decode("utf-8")
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": user_text},
+                    {
+                        "inlineData": {
+                            "mimeType": mime_type,
+                            "data": b64_image,
+                        }
+                    },
+                ]
+            }
+        ],
+        "systemInstruction": {"parts": [{"text": system_instruction}]},
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "temperature": 0.2,
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        res = await client.post(url, json=payload)
+        if res.status_code == 200:
+            data = res.json()
+            candidates = data.get("candidates", [])
+            if candidates:
+                text_out = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                parsed = json.loads(text_out)
+                if isinstance(parsed, list):
+                    return parsed
+                elif isinstance(parsed, dict) and "findings" in parsed:
+                    return parsed["findings"]
+        else:
+            print(f"[ai_engine] Gemini Vision API status {res.status_code}: {res.text}")
+    return None
+
+
+def _pil_visual_and_accessibility_analyzer(
+    image_bytes: bytes | None,
+    image_name: str,
     brand_palette: list[str] | None = None,
     alt_text: str | None = None,
     visual_rules: list[str] | None = None,
+    brand_name: str = "BrandGuard AI",
 ) -> list[dict[str, Any]]:
     """
-    Run brand compliance review on image assets.
-    Checks accessibility alt-text (WCAG AA), brand color palette alignment, and visual guidelines.
+    High-precision deterministic Pillow + WCAG 2.1 analyzer fallback.
+    Extracts dominant colors, measures element contrast ratios, checks resolution, and audits alt-text.
     """
     findings = []
+    dominant_hexes: list[tuple[str, tuple[int, int, int]]] = []
 
-    # 1. Alt-Text Accessibility Rule (WCAG AA Compliance)
+    if image_bytes and HAS_PIL:
+        try:
+            img = Image.open(io.BytesIO(image_bytes))
+            width, height = img.size
+
+            # Check resolution
+            if width < 600 or height < 400:
+                findings.append({
+                    "severity": "warning",
+                    "category": "visual",
+                    "text_highlight": f"Resolution: {width}x{height}px",
+                    "explanation": f"Image resolution ({width}x{height}px) is below the recommended minimum of 1200x630px for high-definition digital marketing.",
+                    "guideline_source": "Visual Asset Standards → Image Resolution & Fidelity",
+                    "suggestion": "Export asset at minimum 2x resolution (1200x630px or higher) to avoid blurriness on retina displays.",
+                    "is_ai_generated": True,
+                    "confidence": 0.95,
+                })
+
+            # Dominant color extraction
+            small = img.convert("RGB").resize((64, 64))
+            raw_colors = small.getcolors(maxcolors=4096) or []
+            sorted_colors = sorted(raw_colors, key=lambda c: c[0], reverse=True)
+            for c in sorted_colors[:5]:
+                rgb = c[1]
+                hex_code = f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}".upper()
+                if not any(h[0] == hex_code for h in dominant_hexes):
+                    dominant_hexes.append((hex_code, rgb))
+
+            # Contrast ratio check between dominant background and foreground elements
+            if len(dominant_hexes) >= 2:
+                bg_color = dominant_hexes[0][1]
+                fg_color = dominant_hexes[1][1]
+                contrast_val = _contrast_ratio(bg_color, fg_color)
+                if contrast_val < 4.5:
+                    findings.append({
+                        "severity": "error",
+                        "category": "accessibility",
+                        "text_highlight": f"Contrast {contrast_val:.1f}:1 ({dominant_hexes[0][0]} vs {dominant_hexes[1][0]})",
+                        "explanation": f"Measured element contrast ratio ({contrast_val:.1f}:1) fails WCAG 2.1 AA Standard 1.4.3 (minimum 4.5:1 required for standard text/icons).",
+                        "guideline_source": "Accessibility Standards → WCAG 2.1 AA Contrast Minimum (1.4.3)",
+                        "suggestion": f"Darken foreground or lighten background to achieve at least 4.5:1 contrast ratio between {dominant_hexes[0][0]} and {dominant_hexes[1][0]}.",
+                        "is_ai_generated": True,
+                        "confidence": 0.94,
+                    })
+                else:
+                    findings.append({
+                        "severity": "info",
+                        "category": "accessibility",
+                        "text_highlight": f"Contrast {contrast_val:.1f}:1",
+                        "explanation": f"Measured visual contrast ratio ({contrast_val:.1f}:1) satisfies WCAG 2.1 AA standard for legible presentation.",
+                        "guideline_source": "Accessibility Standards → WCAG 2.1 AA Contrast Minimum (1.4.3)",
+                        "suggestion": "Maintain strong contrast between text overlays and underlying graphics.",
+                        "is_ai_generated": True,
+                        "confidence": 0.90,
+                    })
+
+            # Check palette adherence
+            if brand_palette and dominant_hexes:
+                palette_rgbs = [_hex_to_rgb(p) for p in brand_palette]
+                off_palette_colors = []
+                for hex_val, rgb in dominant_hexes[:3]:
+                    min_dist = min(_color_distance(rgb, p_rgb) for p_rgb in palette_rgbs)
+                    if min_dist > 130:
+                        off_palette_colors.append(hex_val)
+
+                if off_palette_colors:
+                    findings.append({
+                        "severity": "warning",
+                        "category": "visual",
+                        "text_highlight": f"Detected: {', '.join(off_palette_colors)}",
+                        "explanation": f"Dominant colors ({', '.join(off_palette_colors)}) deviate from approved brand color palette ({', '.join(brand_palette[:3])}).",
+                        "guideline_source": "Visual Identity Guidelines → Approved Palette Harmonization",
+                        "suggestion": f"Adjust background and accent gradients to harmonize with approved brand palette: {', '.join(brand_palette)}.",
+                        "is_ai_generated": True,
+                        "confidence": 0.92,
+                    })
+
+        except Exception as e:
+            print(f"[ai_engine] PIL visual analysis error: {e}")
+
+    # Alt-text checks
     cleaned_alt = (alt_text or "").strip()
     if not cleaned_alt or len(cleaned_alt) < 10:
+        recommended_alt = f"Promotional marketing asset for {brand_name} with brand color styling"
+        if dominant_hexes:
+            recommended_alt += f" in {dominant_hexes[0][0]} colorway"
         findings.append({
             "severity": "error",
             "category": "accessibility",
             "text_highlight": cleaned_alt or "[Missing Alt-Text]",
-            "explanation": "Image asset lacks sufficient alternative text. Brand governance mandates WCAG AA compliance (minimum 10 characters descriptive context for screen readers).",
+            "explanation": "Image asset lacks sufficient alternative text. WCAG 2.1 AA mandates descriptive context (minimum 10 characters) for screen readers.",
             "guideline_source": "Accessibility Standards → WCAG 2.1 AA Non-text Content (1.1.1)",
-            "suggestion": f"Add descriptive alt-text summarizing the image subject and brand context (e.g., 'BrandGuard AI dashboard interface highlighting verified claims').",
+            "suggestion": f"Add descriptive alt-text: '{recommended_alt}'.",
             "is_ai_generated": True,
             "confidence": 1.0,
         })
@@ -379,50 +592,84 @@ async def ai_image_review(
                 "severity": "warning",
                 "category": "accessibility",
                 "text_highlight": cleaned_alt,
-                "explanation": "Alt-text uses generic placeholder terminology ('photo', 'image') without contextual description.",
-                "guideline_source": "Accessibility Standards → Descriptive Alt-Text Best Practice",
-                "suggestion": "Specify the meaningful content and action in the visual rather than stating it is an image.",
+                "explanation": "Alt-text uses generic placeholder terminology ('photo', 'image') without contextual narrative.",
+                "guideline_source": "Accessibility Standards → Descriptive Alt-Text Best Practice (1.1.1)",
+                "suggestion": f"Describe the specific action or product value: '{brand_name} visual display showing enterprise governance feature'.",
                 "is_ai_generated": True,
                 "confidence": 0.90,
             })
 
-    # 2. Brand Palette & Visual Identity Check
-    if brand_palette:
-        palette_str = ", ".join(brand_palette[:4])
-        findings.append({
-            "severity": "info",
-            "category": "visual",
-            "text_highlight": image_url_or_name,
-            "explanation": f"Ensure primary visual assets harmonize with approved brand palette ({palette_str}) and maintain minimum 4.5:1 text-to-background contrast ratio.",
-            "guideline_source": "Visual Identity Guidelines → Approved Palette Harmonization",
-            "suggestion": f"Verify key visual highlights adhere to primary palette colors: {palette_str}.",
-            "is_ai_generated": True,
-            "confidence": 0.85,
-        })
-
-    # 3. Logo Clear Space and Watermark Rules
+    # Logo Clear Space & Padding rule
     findings.append({
-        "severity": "warning",
+        "severity": "info",
         "category": "visual",
-        "text_highlight": image_url_or_name,
-        "explanation": "Logo and graphic placement requires minimum 10% isolation padding (clear space) around all brand emblems, with no distortion or stretching.",
+        "text_highlight": image_name,
+        "explanation": f"Ensure all '{brand_name}' emblems maintain 10% clear space isolation margin around all edges, with no background interference.",
         "guideline_source": "Visual Identity Guidelines → Logo Clear Space & Padding",
-        "suggestion": "Keep safe isolation margin equivalent to the height of the brand icon around all edges.",
+        "suggestion": "Ensure safe zone equivalent to the height of the brand mark around all 4 sides.",
         "is_ai_generated": True,
-        "confidence": 0.92,
+        "confidence": 0.90,
     })
 
     if visual_rules:
-        for rule in visual_rules:
+        for rule in visual_rules[:2]:
             findings.append({
                 "severity": "info",
                 "category": "visual",
-                "text_highlight": image_url_or_name,
+                "text_highlight": image_name,
                 "explanation": f"Visual guideline advisory: {rule}",
                 "guideline_source": f"Visual Identity Rules → {rule}",
-                "suggestion": "Review graphic against organization visual standard before publishing.",
+                "suggestion": "Review graphic against organization visual standards before publishing.",
                 "is_ai_generated": True,
-                "confidence": 0.80,
+                "confidence": 0.85,
             })
 
     return findings
+
+
+async def ai_image_review(
+    image_url_or_name: str,
+    image_bytes: bytes | None = None,
+    mime_type: str = "image/png",
+    brand_palette: list[str] | None = None,
+    alt_text: str | None = None,
+    visual_rules: list[str] | None = None,
+    brand_name: str = "BrandGuard AI",
+) -> list[dict[str, Any]]:
+    """
+    Multimodal & Accessibility Image Review Engine.
+    Executes Gemini Vision when API key is provided, with PIL-based deterministic fallback.
+    """
+    settings = get_settings()
+    gemini_key = settings.GEMINI_API_KEY or settings.GOOGLE_API_KEY or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
+    if gemini_key and image_bytes:
+        try:
+            model = settings.AI_MODEL if settings.AI_MODEL and "gemini" in settings.AI_MODEL else "gemini-2.5-flash"
+            gemini_findings = await _call_gemini_vision_api(
+                image_bytes=image_bytes,
+                mime_type=mime_type,
+                brand_palette=brand_palette,
+                alt_text=alt_text,
+                visual_rules=visual_rules,
+                brand_name=brand_name,
+                image_name=image_url_or_name,
+                api_key=gemini_key,
+                model=model,
+            )
+            if gemini_findings:
+                for f in gemini_findings:
+                    f["is_ai_generated"] = True
+                return gemini_findings
+        except Exception as e:
+            print(f"[ai_engine] Gemini Vision review failed ({e}), falling back to PIL vision analyzer.")
+
+    # High-precision PIL + WCAG deterministic analyzer fallback
+    return _pil_visual_and_accessibility_analyzer(
+        image_bytes=image_bytes,
+        image_name=image_url_or_name,
+        brand_palette=brand_palette,
+        alt_text=alt_text,
+        visual_rules=visual_rules,
+        brand_name=brand_name,
+    )

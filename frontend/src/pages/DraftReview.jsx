@@ -57,6 +57,7 @@ export default function DraftReview() {
   const [altText, setAltText] = useState('')
   const [isAuditingImage, setIsAuditingImage] = useState(false)
   const [showImageAuditBox, setShowImageAuditBox] = useState(false)
+  const [lastAuditedAsset, setLastAuditedAsset] = useState(null)
 
   useEffect(() => {
     fetchDraftData()
@@ -180,6 +181,17 @@ export default function DraftReview() {
       // Refresh findings list to include new visual & accessibility checks
       const updatedFindings = await api.get(`/workspaces/${user.workspace_id}/drafts/${draftId}/review/findings`)
       setFindings(updatedFindings.data)
+
+      // Retain audited asset summary for user visibility
+      setLastAuditedAsset({
+        preview: imagePreview,
+        name: selectedImageFile ? selectedImageFile.name : 'Visual-Asset.png',
+        size: selectedImageFile ? (selectedImageFile.size / 1024).toFixed(1) : null,
+        altText: altText,
+        findingsCount: res.data.length,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      })
+
       setShowImageAuditBox(false)
       setSelectedImageFile(null)
       setImagePreview(null)
@@ -441,6 +453,79 @@ export default function DraftReview() {
                 {showImageAuditBox ? 'Hide Panel' : '+ Audit Visual Asset'}
               </button>
             </div>
+
+            {/* Audited Asset Review Card */}
+            {lastAuditedAsset && (
+              <div className="p-3.5 bg-gradient-to-br from-purple-50/80 to-blue-50/60 border border-purple-200/90 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-purple-600" />
+                    Last Audited Visual Asset
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-mono">{lastAuditedAsset.timestamp}</span>
+                </div>
+
+                <div className="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-purple-100">
+                  {lastAuditedAsset.preview ? (
+                    <img
+                      src={lastAuditedAsset.preview}
+                      alt={lastAuditedAsset.altText || 'Audited asset'}
+                      className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0 shadow-2xs"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <ImageIcon className="w-6 h-6 text-purple-600" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1 text-xs space-y-1">
+                    <p className="font-bold text-gray-900 truncate">{lastAuditedAsset.name}</p>
+                    <p className="text-[11px] text-gray-500">
+                      {lastAuditedAsset.size ? `${lastAuditedAsset.size} KB • ` : ''}
+                      <span className="font-semibold text-purple-700">{lastAuditedAsset.findingsCount} findings generated</span>
+                    </p>
+                    <p className="text-[11px] text-gray-600 truncate">
+                      <strong>Alt-Text:</strong> {lastAuditedAsset.altText ? `"${lastAuditedAsset.altText}"` : <span className="text-rose-500 italic">None provided (WCAG error)</span>}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quick-filter buttons */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] text-gray-400 font-semibold uppercase">Filter Findings:</span>
+                  <button
+                    type="button"
+                    onClick={() => setCategoryFilter('visual')}
+                    className={`px-2 py-0.5 text-[11px] rounded-md border font-medium transition-colors ${
+                      categoryFilter === 'visual'
+                        ? 'bg-purple-600 text-white border-purple-600'
+                        : 'bg-white text-purple-800 border-purple-200 hover:bg-purple-50'
+                    }`}
+                  >
+                    Visual Rules
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCategoryFilter('accessibility')}
+                    className={`px-2 py-0.5 text-[11px] rounded-md border font-medium transition-colors ${
+                      categoryFilter === 'accessibility'
+                        ? 'bg-amber-600 text-white border-amber-600'
+                        : 'bg-white text-amber-800 border-amber-200 hover:bg-amber-50'
+                    }`}
+                  >
+                    WCAG Accessibility
+                  </button>
+                  {categoryFilter !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={() => setCategoryFilter('all')}
+                      className="text-[11px] text-gray-400 hover:text-gray-700 underline ml-auto"
+                    >
+                      Clear Filter
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Expandable Image Upload & Audit Box */}
             {showImageAuditBox && (
