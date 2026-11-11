@@ -95,7 +95,7 @@ Build a **pre-publication, AI-powered brand-governance platform** that:
 
 | # | Task | Owner | Status |
 |---|---|---|---|
-| R3-1 | Image & accessibility checks (logo, palette, alt-text, contrast) | Ajay 🟢 | ✅ Done (Image audit endpoint, WCAG AA alt-text rules, UI image upload & visual card) |
+| R3-1 | Gemini Vision Multimodal & Accessibility Engine (logo, palette, WCAG 2.1 contrast, alt-text) | Ajay 🟢 | ✅ Done (Multimodal Gemini Vision API + PIL WCAG 2.1 AA analyzer + live UI asset card) |
 | R3-2 | Claim verification against approved facts list | Ajay 🟢 | ✅ Done (Rule regex + deep semantic verification against approved facts) |
 | R3-3 | Guideline-gap insights — dashboard shows unclear rules | Ajay 🟢 + Mahesh 🔵 | ✅ Done (Aggregated in Dashboard API & UI) |
 | R3-4 | Revision history — visual diff between versions + reviewer comments | Mahesh 🔵 | ✅ Done (DraftVersion model, versions API, VersionHistory modal with word-diff compare) |
