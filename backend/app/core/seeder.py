@@ -88,37 +88,106 @@ def seed_db_if_empty(db: Session):
                 db.flush()
             users[email] = u
 
-        # 3. Brand Kit
-        approved_terms = ["BrandGuard AI", "Innovex", "Inkloom", "enterprise-grade", "explainable AI", "pre-publication governance"]
-        banned_terms = ["cheap", "miracle", "magic software", "instant fix", "#1 in India", "100% safe", "guaranteed", "unbeatable"]
-        tone_rules = ["Professional", "Empathetic", "Objective", "Clear", "No hyperbole"]
-        approved_facts = [
-            "Over 500+ enterprise clients onboarded",
-            "Founded in 2024",
-            "ASCI pre-publication guideline compliant",
-            "ISO-27001 certified architecture"
-        ]
-        color_palette = ["#1E40AF", "#2563EB", "#10B981", "#F59E0B", "#E11D48"]
+        # 3. Brand Kits (Multi-Industry Governance Kits)
+        initial_kits = [
+            {
+                "name": "Innovex Official Brand Kit",
+                "guidelines": EMBEDDED_GUIDELINES,
+                "approved_terms": ["BrandGuard AI", "Innovex", "Inkloom", "enterprise-grade", "explainable AI", "pre-publication governance"],
+                "banned_terms": ["cheap", "miracle", "magic software", "instant fix", "#1 in India", "100% safe", "guaranteed", "unbeatable"],
+                "tone_rules": ["Professional", "Empathetic", "Objective", "Clear", "No hyperbole"],
+                "approved_facts": [
+                    "Over 500+ enterprise clients onboarded",
+                    "Founded in 2024",
+                    "ASCI pre-publication guideline compliant",
+                    "ISO-27001 certified architecture"
+                ],
+                "color_palette": ["#1E40AF", "#2563EB", "#10B981", "#F59E0B", "#E11D48"],
+            },
+            {
+                "name": "Apex Wealth & FinTech Governance Kit",
+                "guidelines": """APEX FINANCIAL TECHNOLOGIES — REGULATORY & BRAND GOVERNANCE POLICY (v3.1)
+========================================================================
+SEBI & RBI Compliant Advertising & Communications Guidelines
 
-        brand_kit = db.query(BrandKit).filter(BrandKit.workspace_id == workspace.id).first()
-        if not brand_kit:
-            brand_kit = BrandKit(
-                workspace_id=workspace.id,
-                name="Innovex Official Brand Kit",
-                guidelines_raw=EMBEDDED_GUIDELINES,
-                terminology_approved=approved_terms,
-                terminology_banned=banned_terms,
-                tone_rules=tone_rules,
-                approved_facts=approved_facts,
-                color_palette=color_palette,
-                is_indexed=True,
-            )
-            db.add(brand_kit)
-            db.flush()
-            index_guidelines(brand_kit.id, EMBEDDED_GUIDELINES, db)
-        else:
-            brand_kit.guidelines_raw = EMBEDDED_GUIDELINES
-            db.flush()
+1. BRAND POSITIONING & VOICE
+- Brand Identity: Apex Wealth by Apex Financial Technologies.
+- Tone Principles: Prudent, disciplined, transparent, fiduciary. No speculative excitement or FOMO marketing.
+
+2. TERMINOLOGY & DISCLAIMER MANDATES
+- Approved Terms: "Apex Wealth", "SEBI-registered portfolio manager", "institutional-grade custody", "risk-adjusted returns", "asset allocation", "algorithmic rebalancing".
+- Banned Terms: "guaranteed returns", "risk-free", "100% profit", "get rich", "instant payout", "double your money", "can't lose".
+- Regulatory Rule: Never promise fixed percentage returns on equity or mutual fund products.
+
+3. STATUTORY FACTS & DISCLOSURES
+- Approved Facts:
+  * "SEBI Registration Number: INP000007890"
+  * "Over ₹2,400 Crores in Assets Under Management (AUM)"
+  * "Custody backed by top-tier custodian institutions"
+  * "Audited by Big 4 statutory auditors"
+
+4. VISUAL IDENTITY & ACCESSIBILITY
+- Approved Hex Palette: #0F172A (Deep Slate Navy), #0D9488 (Teal Green), #D97706 (Regulatory Gold), #64748B (Muted Slate).
+- Strict Rule: High-contrast disclaimers must satisfy WCAG 2.1 AA (minimum 4.5:1 ratio against background).""",
+                "approved_terms": ["Apex Wealth", "SEBI-registered", "institutional custody", "risk-adjusted returns", "algorithmic rebalancing", "fiduciary"],
+                "banned_terms": ["guaranteed returns", "risk-free", "100% profit", "get rich", "instant payout", "double your money", "can't lose"],
+                "tone_rules": ["Prudent", "Disciplined", "Transparent", "Fiduciary", "No FOMO"],
+                "approved_facts": ["SEBI Registration Number INP000007890", "Over 2400 Crores AUM", "Custody backed by top-tier institutions", "Audited by Big 4"],
+                "color_palette": ["#0F172A", "#0D9488", "#D97706", "#64748B"],
+            },
+            {
+                "name": "Aura BioHealth & Wellness Brand Kit",
+                "guidelines": """AURA BIOHEALTH & LIFE SCIENCES — CLINICAL GOVERNANCE GUIDELINES (v1.8)
+======================================================================
+CDSCO & Consumer Protection Advertising Code Compliance
+
+1. BRAND IDENTITY & ETHOS
+- Brand Identity: Aura BioHealth Solutions.
+- Tone Principles: Empathetic, clinically accurate, modest, scientifically grounded. Never sensationalist.
+
+2. CLINICAL TERMINOLOGY & MEDICAL CLAIMS
+- Approved Terms: "Aura BioHealth", "clinically evaluated", "dermatologist tested", "evidence-backed formulation", "cellular hydration", "standardized bio-extracts".
+- Banned Terms: "miracle cure", "instant weight loss", "100% cure", "reverse aging overnight", "cancer preventive", "magical healing", "permanent relief".
+- Regulatory Rule: Do not make disease cure claims for nutraceutical or cosmeceutical products.
+
+3. CERTIFIED CLAIMS & CLINICAL PRECEDENTS
+- Approved Facts:
+  * "Clinically evaluated across 1,200 participants in double-blind trials"
+  * "Manufactured in WHO-GMP certified facilities"
+  * "ISO-22000 and FSSAI approved formulation"
+  * "Published research in Peer-Reviewed Phytomedicine Journals"
+
+4. VISUAL IDENTITY & GRAPHICS
+- Approved Hex Palette: #065F46 (Forest Emerald), #0284C7 (Clinical Blue), #10B981 (Organic Mint), #F3F4F6 (Clean White/Grey).
+- Medical Imagery Rule: Avoid graphic medical imagery or before/after photos with deceptive lighting or digital retouching.""",
+                "approved_terms": ["Aura BioHealth", "clinically evaluated", "dermatologist tested", "evidence-backed formulation", "cellular hydration", "standardized bio-extracts"],
+                "banned_terms": ["miracle cure", "instant weight loss", "100% cure", "reverse aging overnight", "cancer preventive", "magical healing", "permanent relief"],
+                "tone_rules": ["Empathetic", "Clinically Accurate", "Modest", "Scientifically Grounded"],
+                "approved_facts": ["Clinically evaluated across 1200 participants", "WHO-GMP certified facilities", "ISO-22000 and FSSAI approved", "Published in Peer-Reviewed Journals"],
+                "color_palette": ["#065F46", "#0284C7", "#10B981", "#F3F4F6"],
+            }
+        ]
+
+        for kit_meta in initial_kits:
+            bk = db.query(BrandKit).filter(BrandKit.workspace_id == workspace.id, BrandKit.name == kit_meta["name"]).first()
+            if not bk:
+                bk = BrandKit(
+                    workspace_id=workspace.id,
+                    name=kit_meta["name"],
+                    guidelines_raw=kit_meta["guidelines"],
+                    terminology_approved=kit_meta["approved_terms"],
+                    terminology_banned=kit_meta["banned_terms"],
+                    tone_rules=kit_meta["tone_rules"],
+                    approved_facts=kit_meta["approved_facts"],
+                    color_palette=kit_meta["color_palette"],
+                    is_indexed=True,
+                )
+                db.add(bk)
+                db.flush()
+                index_guidelines(bk.id, kit_meta["guidelines"], db)
+            else:
+                bk.guidelines_raw = kit_meta["guidelines"]
+                db.flush()
 
         # 4. Drafts & Research Scenarios
         creator_user = users.get("shrushti@innovex.com")
