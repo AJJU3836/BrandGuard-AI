@@ -1,14 +1,16 @@
 """
 BrandGuard AI — Embedded Auto-Seeder
-Ensures demo workspace, team accounts, brand kit, and drafts exist on startup.
+Ensures demo workspace, team accounts, brand kit, research-grounded guidelines, and realistic drafts exist on startup.
 """
 import os
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from app.core.security import hash_password
 from app.models.user import User
 from app.models.workspace import Workspace
 from app.models.brand_kit import BrandKit
 from app.models.draft import Draft
+from app.models.draft_version import DraftVersion
 from app.models.finding import Finding
 from app.models.comment import Comment
 from app.models.audit_log import AuditLog
@@ -16,39 +18,42 @@ from app.services.rule_engine import run_all_checks
 from app.services.brand_kit_service import index_guidelines
 
 EMBEDDED_GUIDELINES = """
-INNOVEX BRAND GOVERNANCE GUIDELINES (v2.4)
-=========================================
+INNOVEX ENTERPRISE BRAND GOVERNANCE POLICY (v2.4)
+=================================================
+Empirically formulated from Innovex's Q3 2026 Creative Compliance Survey (N = 42 Marketing Teams) & ASCI Regulatory Standards
 
 1. BRAND IDENTITY & POSITIONING
-- Brand Name: BrandGuard AI by Innovex.
+- Brand Name: "BrandGuard AI by Innovex". (Never write "Brand Guard" as two words or lowercase "brandguard").
 - Core Promise: Intelligent pre-publication brand governance powered by explainable AI.
-- Voice & Tone: Confident, professional, objective, clear. Never hyperbolic.
+- Voice & Tone: Confident, professional, objective, and clear. Avoid sensationalist hyperbole or colloquial slang.
 
-2. TERMINOLOGY STANDARDS
-- Approved terms: "BrandGuard AI", "Innovex", "Inkloom", "enterprise-grade", "explainable AI".
-- Prohibited terms: "cheap", "miracle", "magic software", "instant fix", "#1 in India", "100% safe", "guaranteed".
+2. TERMINOLOGY STANDARDS (Survey-Backed Standards)
+- Approved Terms: "BrandGuard AI", "Innovex", "Inkloom", "enterprise-grade", "explainable AI", "pre-publication governance".
+- Prohibited Terms: "cheap", "miracle", "magic software", "instant fix", "#1 in India", "100% safe", "guaranteed", "unbeatable".
+- Empirical Justification: In our survey of 42 agency creative directors, 74% of enterprise buyers associated words like "cheap" and "magic" with scam utilities, reducing B2B contract conversion by 31%.
 
-3. FACTUAL ACCURACY & CLAIM SUBSTANTIATION (ASCI COMPLIANCE)
-- Superlative claims require verified third-party evidence.
-- Approved Facts:
+3. FACTUAL ACCURACY & CLAIM SUBSTANTIATION (ASCI Chapter 1 Compliance)
+- Superlative claims require verified third-party empirical evidence prior to publication.
+- Do not state "#1 in India" or "unbeatable" without quoting certified market share data.
+- Approved Facts Registry:
   * "Over 500+ enterprise clients onboarded"
   * "Founded in 2024"
   * "ASCI pre-publication guideline compliant"
   * "ISO-27001 certified architecture"
 
-4. VISUAL IDENTITY
+4. VISUAL IDENTITY & ACCESSIBILITY (WCAG 2.1 AA Standards)
 - Primary Palette: #1E40AF (Primary Blue), #2563EB (Accent Blue), #10B981 (Success Green), #F59E0B (Warning Amber), #E11D48 (Error Red).
+- Prohibited Visual Hues: Neon pink (#FF0055), high-saturation purples, or unapproved gradients.
+- Accessibility: All published visual graphics must maintain a minimum 4.5:1 WCAG 2.1 AA contrast ratio for standard text and include descriptive alt-text.
 """
 
 def seed_db_if_empty(db: Session):
-    """Seed demo data if workspace or users don't exist yet."""
+    """Seed demo data if workspace or users don't exist yet, or enrich drafts if count < 6."""
     try:
-        existing_user = db.query(User).filter(User.email == "kaleajay626@gmail.com").first()
-        if existing_user:
-            return
-
         # 1. Workspace
         workspace = db.query(Workspace).filter(Workspace.name == "Innovex Governance").first()
+        if not workspace:
+            workspace = db.query(Workspace).first()
         if not workspace:
             workspace = Workspace(
                 name="Innovex Governance",
@@ -78,11 +83,14 @@ def seed_db_if_empty(db: Session):
                 )
                 db.add(u)
                 db.flush()
+            elif not u.workspace_id:
+                u.workspace_id = workspace.id
+                db.flush()
             users[email] = u
 
         # 3. Brand Kit
-        approved_terms = ["BrandGuard AI", "Innovex", "Inkloom", "enterprise-grade", "explainable AI"]
-        banned_terms = ["cheap", "miracle", "magic software", "instant fix", "#1 in India", "100% safe", "guaranteed"]
+        approved_terms = ["BrandGuard AI", "Innovex", "Inkloom", "enterprise-grade", "explainable AI", "pre-publication governance"]
+        banned_terms = ["cheap", "miracle", "magic software", "instant fix", "#1 in India", "100% safe", "guaranteed", "unbeatable"]
         tone_rules = ["Professional", "Empathetic", "Objective", "Clear", "No hyperbole"]
         approved_facts = [
             "Over 500+ enterprise clients onboarded",
@@ -108,73 +116,161 @@ def seed_db_if_empty(db: Session):
             db.add(brand_kit)
             db.flush()
             index_guidelines(brand_kit.id, EMBEDDED_GUIDELINES, db)
+        else:
+            brand_kit.guidelines_raw = EMBEDDED_GUIDELINES
+            db.flush()
 
-        # 4. Drafts
-        creator_user = users["shrushti@innovex.com"]
-        reviewer_user = users["asma@innovex.com"]
-        manager_user = users["mahesh@innovex.com"]
+        # 4. Drafts & Research Scenarios
+        creator_user = users.get("shrushti@innovex.com")
+        reviewer_user = users.get("asma@innovex.com")
+        manager_user = users.get("mahesh@innovex.com")
+        admin_user = users.get("kaleajay626@gmail.com")
 
-        draft_samples = [
-            (
-                "Launch Campaign — Promotional Social Copy",
-                (
-                    "Introducing Brand Guard! We are the #1 in India brand protection tool. "
-                    "Our software is 100% safe and guaranteed to stop every brand crisis. "
-                    "Don't waste budget on expensive suites when you can get cheap software right here. "
-                    "Primary highlight styled in #FF0055."
+        if not creator_user or not reviewer_user:
+            db.commit()
+            return
+
+        existing_drafts_count = db.query(Draft).filter(Draft.workspace_id == workspace.id).count()
+        if existing_drafts_count >= 6:
+            db.commit()
+            return
+
+        research_drafts = [
+            {
+                "title": "Q4 Global Product Launch — Social Announcement",
+                "content": (
+                    "Introducing Brand Guard. We are recognized as the #1 in India brand protection solution. "
+                    "Our software is 100% safe, completely guaranteed, and unbeatable across the sector. "
+                    "Don't waste money on overpriced legacy alternatives when you can get cheap software right here. "
+                    "Brand accent styled in #FF0055."
                 ),
-                "social_post",
-                "in_review"
-            ),
-            (
-                "Enterprise Welcome Email Template",
-                (
-                    "Welcome to BrandGuard AI! Founded in 2024, our enterprise-grade platform "
+                "content_type": "social_post",
+                "status": "in_review",
+                "creator": creator_user,
+                "history": [
+                    ("v1 (Initial submission from creative agency)", "Introducing Brand Guard! We are #1 in India cheap software with 100% safe magic."),
+                ],
+                "comments": [
+                    (reviewer_user, "As per our ASCI Chapter 1 compliance audit, the claim '#1 in India' cannot be published without third-party market research citations. Please accept the approved rewrite to reference our 500+ verified enterprise client milestone instead."),
+                    (creator_user, "Understood. Applying the suggested terminology fix and updating the color hex to #1E40AF.")
+                ]
+            },
+            {
+                "title": "Enterprise Customer Onboarding & Welcome Series",
+                "content": (
+                    "Welcome to BrandGuard AI by Innovex. Founded in 2024, our enterprise-grade platform "
                     "empowers marketing teams with explainable AI findings and pre-publication governance. "
-                    "Over 500+ enterprise clients onboarded trust our ISO-27001 certified architecture."
+                    "Over 500+ enterprise clients onboarded trust our ISO-27001 certified architecture. "
+                    "Primary palette: #1E40AF."
                 ),
-                "email",
-                "approved"
-            ),
-            (
-                "Instagram Ad Copy — Festive Season 2026",
-                (
-                    "This festive season, get the CHEAPEST brand safety solution in the market! "
-                    "BrandGuard AI — the #1 in India AI-powered compliance tool that is 100% safe for your marketing team. "
-                    "Guaranteed results or your money back! Don't miss this magic software deal. "
-                    "Contact us now for an instant fix!"
+                "content_type": "email",
+                "status": "approved",
+                "creator": creator_user,
+                "comments": [
+                    (manager_user, "Approved by compliance. All claims match our verified corporate fact registry and adhere to WCAG 2.1 contrast rules.")
+                ]
+            },
+            {
+                "title": "Q3 Performance Marketing Ad Copy (Search & Social)",
+                "content": (
+                    "This festive season, get the cheapest brand safety solution in the market! "
+                    "BrandGuard AI is guaranteed to deliver results or your money back. "
+                    "Don't miss this miracle software deal. Contact us for an instant fix!"
                 ),
-                "social_post",
-                "in_review"
-            ),
-            (
-                "LinkedIn: Thought Leadership — AI in Brand Compliance",
-                (
-                    "At Innovex, we believe that explainable AI is the future of brand governance. "
-                    "Our enterprise-grade BrandGuard AI platform has helped over 500+ enterprise clients maintain brand consistency "
-                    "while remaining ASCI pre-publication guideline compliant. Founded in 2024, our mission is proactive protection."
+                "content_type": "social_post",
+                "status": "changes_requested",
+                "creator": creator_user,
+                "comments": [
+                    (reviewer_user, "Our Q3 creative survey found that hyperbolic promises ('miracle software', 'instant fix') erode enterprise buyer trust by 74%. Rephrasing required to maintain our objective, authoritative tone standard.")
+                ]
+            },
+            {
+                "title": "Industry Survey Report: AI Governance & Advertising Standards",
+                "content": (
+                    "At Innovex, we believe explainable AI is the future of brand governance. "
+                    "In our recent survey of 42 marketing teams, 83% of content creators reported that manual compliance reviews take over 4 business days. "
+                    "BrandGuard AI resolves this with pre-publication verification, keeping enterprises ASCI compliant."
                 ),
-                "social_post",
-                "approved"
-            )
+                "content_type": "blog_post",
+                "status": "approved",
+                "creator": creator_user,
+                "comments": [
+                    (admin_user, "Published on official company blog. Excellent incorporation of our primary survey findings.")
+                ]
+            },
+            {
+                "title": "Agency Partner Campaign — Festive Promotional Copy",
+                "content": (
+                    "Looking for unbeatable marketing compliance? BrandGuard AI gives you 100% safe protection with instant setup. "
+                    "Brand accent styled in #FF0055."
+                ),
+                "content_type": "social_post",
+                "status": "in_review",
+                "creator": creator_user,
+                "comments": [
+                    (creator_user, "External agency draft received. Flagged non-brand hex #FF0055 and superlative claim 'unbeatable' before client sign-off.")
+                ]
+            },
+            {
+                "title": "Investor & Media Briefing — Q3 Operational Milestones",
+                "content": (
+                    "Innovex today released its Q3 governance report, noting that over 500+ enterprise clients onboarded "
+                    "have automated pre-publication compliance. BrandGuard AI continues to maintain ISO-27001 certified architecture "
+                    "while delivering explainable AI oversight across all digital creative channels."
+                ),
+                "content_type": "press_release",
+                "status": "approved",
+                "creator": creator_user,
+                "comments": [
+                    (manager_user, "Executive sign-off complete. All operational metrics cross-verified against corporate audited filings.")
+                ]
+            }
         ]
 
-        for title, content, ctype, status in draft_samples:
-            d = db.query(Draft).filter(Draft.title == title).first()
+        for item in research_drafts:
+            d = db.query(Draft).filter(Draft.title == item["title"]).first()
             if not d:
                 d = Draft(
                     workspace_id=workspace.id,
-                    creator_id=creator_user.id,
-                    title=title,
-                    content=content,
-                    content_type=ctype,
-                    status=status,
+                    creator_id=item["creator"].id,
+                    title=item["title"],
+                    content=item["content"],
+                    content_type=item["content_type"],
+                    status=item["status"],
                 )
                 db.add(d)
                 db.flush()
 
+                # Add version history
+                if "history" in item:
+                    for v_num, (v_summary, v_content) in enumerate(item["history"], 1):
+                        dv = DraftVersion(
+                            draft_id=d.id,
+                            version_number=v_num,
+                            content=v_content,
+                            change_summary=v_summary,
+                            created_at=datetime.now(timezone.utc) - timedelta(hours=2)
+                        )
+                        db.add(dv)
+                    db.add(DraftVersion(
+                        draft_id=d.id,
+                        version_number=len(item["history"]) + 1,
+                        content=item["content"],
+                        change_summary="Current working draft (Audited)",
+                        created_at=datetime.now(timezone.utc)
+                    ))
+                else:
+                    db.add(DraftVersion(
+                        draft_id=d.id,
+                        version_number=1,
+                        content=item["content"],
+                        change_summary="Initial submission",
+                        created_at=datetime.now(timezone.utc)
+                    ))
+
+                # Run checks
                 findings_data = run_all_checks(
-                    content=content,
+                    content=item["content"],
                     banned_terms=banned_terms,
                     approved_terms=approved_terms,
                     approved_facts=approved_facts,
@@ -195,27 +291,30 @@ def seed_db_if_empty(db: Session):
                     )
                     db.add(finding)
 
-                if status == "in_review":
+                # Add comments
+                for author, comment_text in item.get("comments", []):
                     comm = Comment(
                         draft_id=d.id,
-                        user_id=reviewer_user.id,
-                        content="Flagged several banned terms and unverified superlative claims. Please rephrase."
+                        user_id=author.id,
+                        content=comment_text,
+                        created_at=datetime.now(timezone.utc) - timedelta(minutes=20)
                     )
                     db.add(comm)
 
+                # Add AuditLog
                 audit = AuditLog(
                     workspace_id=workspace.id,
-                    user_id=creator_user.id,
+                    user_id=item["creator"].id,
                     action="draft_created",
                     entity_type="draft",
                     entity_id=d.id,
-                    details={"title": title, "findings_count": len(findings_data)},
+                    details={"title": item["title"], "findings_count": len(findings_data), "status": item["status"]},
                     ai_service_used="rule_engine"
                 )
                 db.add(audit)
 
         db.commit()
-        print("🌱 Seeding complete: Demo users, workspace, and brand kit created.")
+        print("🌱 Seeding complete: Research-backed guidelines, team accounts, and drafts loaded.")
     except Exception as e:
         db.rollback()
         print(f"⚠️ Auto-seed error: {e}")

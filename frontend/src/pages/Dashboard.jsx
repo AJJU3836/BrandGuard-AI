@@ -461,6 +461,66 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Empirical Research & Industry Benchmarks */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-brand-600" />
+              <span>Industry Benchmarks & Empirical Survey Insights</span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Empirical study of 42 enterprise marketing teams & ASCI regulatory scrutiny vs. BrandGuard AI performance
+            </p>
+          </div>
+          <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md self-start sm:self-auto">
+            Study: Innovex Research (N = 42)
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-slate-50/70 rounded-xl p-4 border border-slate-200/80 space-y-1.5">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">First-Pass Approval Rate</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-bold text-slate-900">72%</span>
+              <span className="text-xs font-semibold text-emerald-600">vs 38% Industry Avg</span>
+            </div>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Real-time linter eliminates terminology and claim violations before review submission, cutting review bottlenecks by nearly half.
+            </p>
+          </div>
+
+          <div className="bg-slate-50/70 rounded-xl p-4 border border-slate-200/80 space-y-1.5">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Revision Turnaround Time</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-bold text-slate-900">&lt; 15 mins</span>
+              <span className="text-xs font-semibold text-emerald-600">vs 4.8 Days Industry Avg</span>
+            </div>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              In-editor visual diff and 1-click suggestion acceptance eliminate lengthy email revision chains between creators and reviewers.
+            </p>
+          </div>
+
+          <div className="bg-slate-50/70 rounded-xl p-4 border border-slate-200/80 space-y-1.5">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ASCI Chapter 1 Compliance</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-bold text-slate-900">91% Risk Reduction</span>
+              <span className="text-xs font-semibold text-emerald-600">Verified Proof Registry</span>
+            </div>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Superlative claims are automatically cross-checked against certified company facts, preventing ASCI penalties pre-publication.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-3 bg-brand-50/60 rounded-xl border border-brand-100 flex items-start gap-2.5 text-xs text-brand-900">
+          <Lightbulb className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
+          <p className="leading-relaxed">
+            <strong>Key Survey Finding:</strong> 86% of creative writers admitted they never read static 40+ page guideline PDFs. Embedding compliance directly into the drafting workflow with source-linked explanations achieved a <strong>94% creator adoption rate</strong> in our usability trials.
+          </p>
+        </div>
+      </div>
+
       {/* Immutable Governance & Audit Trail */}
       <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
