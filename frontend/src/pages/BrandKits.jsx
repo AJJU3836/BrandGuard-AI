@@ -22,7 +22,7 @@ export default function BrandKits() {
   const [indexingKitId, setIndexingKitId] = useState(null)
 
   // Form state
-  const [name, setName] = useState('Acme Corp Brand Kit')
+  const [name, setName] = useState('Innovex Enterprise Brand Kit')
   const [guidelinesRaw, setGuidelinesRaw] = useState('')
   const [approvedTerms, setApprovedTerms] = useState('BrandGuard, AI-powered, NextGen')
   const [bannedTerms, setBannedTerms] = useState('cheap, 100% safe, #1 in India, guaranteed')

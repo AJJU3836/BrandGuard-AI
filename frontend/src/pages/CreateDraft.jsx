@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
-import { Sparkles, FileText, ArrowLeft, AlertCircle } from 'lucide-react'
+import { FileText, ArrowLeft, AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function CreateDraft() {
@@ -14,28 +14,28 @@ export default function CreateDraft() {
   const [loading, setLoading] = useState(false)
 
   const handleQuickSample = () => {
-    setTitle('Launch Campaign Social Announcement')
+    setTitle('Q4 Platform Launch Campaign Copy')
     setContentType('social_post')
     setContent(
-      "🚀 Introducing Brand Guard! We are the #1 in India brand protection tool. " +
-      "Our software is 100% safe, completely guaranteed, and unbeatable. " +
-      "Don't waste money on overpriced alternatives when you can get cheap software right here. " +
-      "Brand theme updated to #FF0055."
+      "Introducing Brand Guard. We are recognized as the #1 in India brand protection solution. " +
+      "Our software is 100% safe, completely guaranteed, and unbeatable across the sector. " +
+      "Don't waste money on overpriced legacy alternatives when you can get cheap software right here. " +
+      "Brand accent styled in #FF0055."
     )
-    toast.success('Sample draft loaded with typical ASCI & brand guideline violations!')
+    toast.success('Loaded unverified draft containing ASCI and brand kit flags.')
   }
 
   const handleCompliantSample = () => {
-    setTitle('Q4 Enterprise Innovation & Platform Launch')
+    setTitle('Enterprise Governance Announcement')
     setContentType('social_post')
     setContent(
-      "🚀 We are proud to present BrandGuard AI by Innovex! " +
-      "Engineered to help enterprise marketing and design teams automate brand compliance, tone consistency, and ASCI regulatory standards with explainable AI. " +
-      "Over 500+ enterprise clients onboarded worldwide. " +
-      "Primary brand palette verified: #1E40AF and #2563EB. " +
-      "Schedule a walkthrough with our governance specialists today."
+      "We are proud to present BrandGuard AI by Innovex. " +
+      "Engineered for enterprise marketing and communications teams to maintain brand integrity, tone consistency, and ASCI regulatory compliance. " +
+      "With over 500+ enterprise clients onboarded worldwide, our platform offers proven governance at scale. " +
+      "Verified primary palette: #1E40AF and #2563EB. " +
+      "Schedule a consultation with our compliance specialists today."
     )
-    toast.success('Compliant draft loaded (0 violations anticipated)!')
+    toast.success('Loaded approved enterprise copy (100% compliant).')
   }
 
   const handleSubmit = async (e) => {
@@ -74,9 +74,8 @@ export default function CreateDraft() {
       // 2. Automatically trigger review
       try {
         await api.post(`/workspaces/${workspaceId}/drafts/${draftId}/review/`)
-        toast.success('Draft created and brand compliance review initiated!')
+        toast.success('Draft submitted and compliance audit initiated.')
       } catch (revErr) {
-        // If no brand kit, warn user
         toast.error(revErr.response?.data?.detail || 'Review triggered with warnings.')
       }
 
@@ -93,38 +92,38 @@ export default function CreateDraft() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           onClick={() => navigate('/drafts')}
-          className="text-sm font-medium text-gray-500 hover:text-gray-700 flex items-center gap-1.5"
+          className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to drafts
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to drafts
         </button>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleQuickSample}
-            className="px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-semibold hover:bg-amber-100 transition-colors flex items-center gap-1.5 shadow-2xs"
-            title="Load sample with intentional guideline & regulatory violations"
+            className="px-3 py-1.5 bg-white text-slate-700 border border-slate-200 hover:border-amber-300 hover:bg-amber-50/50 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-2xs"
+            title="Load sample copy with intentional terminology & claim violations"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-600" /> Violative Sample (Demo)
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" /> Load Flagged Copy
           </button>
           <button
             type="button"
             onClick={handleCompliantSample}
-            className="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold hover:bg-emerald-100 transition-colors flex items-center gap-1.5 shadow-2xs"
-            title="Load sample adhering 100% to brand kit rules"
+            className="px-3 py-1.5 bg-white text-slate-700 border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-2xs"
+            title="Load sample copy strictly adhering to brand kit guidelines"
           >
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Compliant Sample (Green Pass)
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Load Pre-Approved Copy
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-sm space-y-6">
+      <div className="bg-white rounded-2xl p-8 border border-slate-200/80 shadow-xs space-y-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="w-6 h-6 text-brand-600" />
-            Submit Draft for Pre-Publication Governance
+          <h1 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <FileText className="w-5 h-5 text-brand-600" />
+            Submit Content for Governance Audit
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Our multi-engine pipeline verifies claims, terminology, tone rules, and brand colors in real-time.
+          <p className="text-xs text-slate-500 mt-1">
+            Deterministic rule engines and semantic AI inspect claims, terminology, voice principles, and asset rules in real-time.
           </p>
         </div>
 
