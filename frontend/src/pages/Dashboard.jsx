@@ -138,37 +138,37 @@ export default function Dashboard() {
   })
 
   return (
-    <div className="space-y-8">
-      {/* Welcome & Governance Health Header */}
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-200/80 shadow-xs">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Governance Intelligence Hub
+            <h1 className="text-xl font-semibold text-gray-900">
+              Brand Governance
             </h1>
             <span className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${healthBadge.color}`}>
               <span className={`w-2 h-2 rounded-full ${healthBadge.dot} animate-pulse`} />
-              <span>{healthScore}% • {healthBadge.label}</span>
+              <span>{healthScore}% — {healthBadge.label}</span>
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1.5">
-            Pre-publication governance telemetry: root-cause diagnosis, guideline friction, and format risk analysis.
+          <p className="text-xs text-gray-400 mt-1">
+            Root-cause diagnostics, guideline friction, and format risk — updated in real time.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/brand-kits"
             className="px-3.5 py-2 border border-gray-300 rounded-xl text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5"
           >
             <BookOpen className="w-3.5 h-3.5 text-brand-600" />
-            <span>Brand Kit Rules</span>
+            <span>Brand Kits</span>
           </Link>
           <Link
             to="/drafts/new"
             className="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700 transition-colors shadow-2xs flex items-center gap-1.5"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Audit New Draft</span>
+            <span>Audit Draft</span>
           </Link>
         </div>
       </div>

@@ -106,27 +106,27 @@ export default function Drafts() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="flex items-center gap-2 w-full sm:w-80 border border-gray-300 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-brand-500">
-          <Search className="w-4 h-4 text-gray-400" />
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="flex items-center gap-2 w-full sm:w-72 border border-gray-200 rounded-lg px-3 py-2 bg-white focus-within:ring-2 focus-within:ring-brand-500 shadow-xs">
+          <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
           <input
             type="text"
             placeholder="Search drafts..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full text-sm outline-none bg-transparent"
+            className="w-full text-xs outline-none bg-transparent text-gray-700 placeholder-gray-400"
           />
         </div>
 
-        <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex gap-1.5 flex-wrap">
           {['all', 'draft', 'in_review', 'changes_requested', 'approved'].map((st) => (
             <button
               key={st}
               onClick={() => setFilterStatus(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize whitespace-nowrap transition-colors ${
+              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold capitalize whitespace-nowrap transition-colors ${
                 filterStatus === st
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-brand-600 text-white shadow-xs'
+                  : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
               }`}
             >
               {st.replace('_', ' ')}
@@ -154,48 +154,46 @@ export default function Drafts() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden divide-y divide-gray-100">
+        <div className="space-y-2">
           {filtered.map((draft) => (
             <Link
               key={draft.id}
               to={`/drafts/${draft.id}`}
-              className="p-5 hover:bg-gray-50 flex items-center justify-between transition-colors block"
+              className="bg-white border border-gray-200 rounded-xl p-4 hover:border-brand-300 hover:shadow-xs flex items-start justify-between transition-all group block"
             >
-              <div className="space-y-1.5 flex-1 pr-6">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="text-base font-semibold text-gray-900 hover:text-brand-600">
+              <div className="space-y-2 flex-1 pr-4 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm font-semibold text-gray-900 group-hover:text-brand-600 transition-colors truncate">
                     {draft.title}
                   </h3>
                   {getStatusBadge(draft.status)}
-                  <span className="capitalize px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                  <span className="capitalize px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-200 shrink-0">
                     {draft.content_type?.replace('_', ' ')}
                   </span>
-                  {/* Finding count badge */}
                   {draft.findings_count > 0 ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 shrink-0">
                       <ShieldAlert className="w-3 h-3" />
                       {draft.findings_count} violation{draft.findings_count !== 1 ? 's' : ''}
                     </span>
                   ) : draft.findings_count === 0 && draft.status !== 'draft' ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                       <ShieldCheck className="w-3 h-3" />
                       Clean
                     </span>
                   ) : null}
                 </div>
-                <p className="text-sm text-gray-400 line-clamp-1 text-xs italic">
-                  {draft.content?.slice(0, 120)}{draft.content?.length > 120 ? '…' : ''}
+                <p className="text-xs text-gray-400 leading-relaxed line-clamp-1">
+                  {draft.content?.slice(0, 130)}{draft.content?.length > 130 ? '…' : ''}
                 </p>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span>{draft.content?.split(/\s+/).filter(Boolean).length || 0} words</span>
+                <div className="flex items-center gap-3 text-[11px] text-gray-400">
+                  <span className="tabular-nums">{draft.content?.split(/\s+/).filter(Boolean).length || 0} words</span>
                   <span>·</span>
                   <span>Updated {new Date(draft.updated_at).toLocaleString()}</span>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 text-brand-600 font-medium text-sm">
-                <span>Inspect Review</span>
-                <ArrowRight className="w-4 h-4" />
+              <div className="flex items-center gap-1 text-xs font-medium text-gray-400 group-hover:text-brand-600 transition-colors shrink-0 mt-0.5">
+                <span className="hidden sm:block">Review</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </div>
             </Link>
           ))}

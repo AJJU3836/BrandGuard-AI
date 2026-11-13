@@ -80,8 +80,8 @@ export default function Layout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1">
-          <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <nav className="flex-1 p-3 space-y-0.5">
+          <div className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             Workspace
           </div>
           {navItems.map(({ to, icon: Icon, label }) => (
@@ -90,10 +90,10 @@ export default function Layout() {
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
                   isActive
-                    ? 'bg-slate-800 text-white shadow-2xs font-semibold'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                    ? 'bg-brand-600 text-white shadow-xs'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
                 }`
               }
             >
