@@ -1,0 +1,529 @@
+{
+  "workspace": [
+    {
+      "id": "ce7496ab-aee9-42e7-9ed8-ea532a721683",
+      "name": "Innovex Governance",
+      "description": "Official Innovex workspace for intelligent brand governance.",
+      "created_at": "2026-11-12T07:12:47.016102"
+    }
+  ],
+  "brand_kits": [
+    {
+      "id": "ae21b7ef-49ff-4e9e-80c0-05ac5c59c0b6",
+      "workspace_id": "ce7496ab-aee9-42e7-9ed8-ea532a721683",
+      "name": "Innovex Official Brand Kit",
+      "guidelines_raw": "\nINNOVEX BRAND GOVERNANCE GUIDELINES (v2.4)\n=========================================\n\n1. BRAND IDENTITY & POSITIONING\n- Brand Name: BrandGuard AI by Innovex.\n- Core Promise: Intelligent pre-publication brand governance powered by explainable AI.\n- Voice & Tone: Confident, professional, objective, clear. Never hyperbolic.\n\n2. TERMINOLOGY STANDARDS\n- Approved terms: \"BrandGuard AI\", \"Innovex\", \"Inkloom\", \"enterprise-grade\", \"explainable AI\".\n- Prohibited terms: \"cheap\", \"miracle\", \"magic software\", \"instant fix\", \"#1 in India\", \"100% safe\", \"guaranteed\".\n\n3. FACTUAL ACCURACY & CLAIM SUBSTANTIATION (ASCI COMPLIANCE)\n- Superlative claims require verified third-party evidence.\n- Approved Facts:\n  * \"Over 500+ enterprise clients onboarded\"\n  * \"Founded in 2024\"\n  * \"ASCI pre-publication guideline compliant\"\n  * \"ISO-27001 certified architecture\"\n\n4. VISUAL IDENTITY\n- Primary Palette: #1E40AF (Primary Blue), #2563EB (Accent Blue), #10B981 (Success Green), #F59E0B (Warning Amber), #E11D48 (Error Red).\n",
+      "terminology_approved": [
+        "BrandGuard AI",
+        "Innovex",
+        "Inkloom",
+        "enterprise-grade",
+        "explainable AI"
+      ],
+      "terminology_banned": [
+        "cheap",
+        "miracle",
+        "magic software",
+        "instant fix",
+        "#1 in India",
+        "100% safe",
+        "guaranteed"
+      ],
+      "tone_rules": [
+        "Professional",
+        "Empathetic",
+        "Objective",
+        "Clear",
+        "No hyperbole"
+      ],
+      "approved_facts": [
+        "Over 500+ enterprise clients onboarded",
+        "Founded in 2024",
+        "ASCI pre-publication guideline compliant",
+        "ISO-27001 certified architecture"
+      ],
+      "color_palette": [
+        "#1E40AF",
+        "#2563EB",
+        "#10B981",
+        "#F59E0B",
+        "#E11D48"
+      ],
+      "is_indexed": true,
+      "created_at": "2026-11-12T07:12:53.817626",
+      "updated_at": "2026-11-12T07:12:53.817629"
+    },
+    {
+      "id": "107b7bf1-375d-416f-9dfc-e6067cd9536f",
+      "workspace_id": "ce7496ab-aee9-42e7-9ed8-ea532a721683",
+      "name": "Apex Wealth & FinTech Governance Kit",
+      "guidelines_raw": "APEX FINANCIAL TECHNOLOGIES \u2014 REGULATORY & BRAND GOVERNANCE POLICY (v3.1)\n========================================================================\nSEBI & RBI Compliant Advertising & Communications Guidelines\n\n1. BRAND POSITIONING & VOICE\n- Brand Identity: Apex Wealth by Apex Financial Technologies.\n- Tone Principles: Prudent, disciplined, transparent, fiduciary. No speculative excitement or FOMO marketing.\n\n2. TERMINOLOGY & DISCLAIMER MANDATES\n- Approved Terms: \"Apex Wealth\", \"SEBI-registered portfolio manager\", \"institutional-grade custody\", \"risk-adjusted returns\", \"asset allocation\", \"algorithmic rebalancing\".\n- Banned Terms: \"guaranteed returns\", \"risk-free\", \"100% profit\", \"get rich\", \"instant payout\", \"double your money\", \"can't lose\".\n- Regulatory Rule: Never promise fixed percentage returns on equity or mutual fund products.\n\n3. STATUTORY FACTS & DISCLOSURES\n- Approved Facts:\n  * \"SEBI Registration Number: INP000007890\"\n  * \"Over \u20b92,400 Crores in Assets Under Management (AUM)\"\n  * \"Custody backed by top-tier custodian institutions\"\n  * \"Audited by Big 4 statutory auditors\"\n\n4. VISUAL IDENTITY & ACCESSIBILITY\n- Approved Hex Palette: #0F172A (Deep Slate Navy), #0D9488 (Teal Green), #D97706 (Regulatory Gold), #64748B (Muted Slate).\n- Strict Rule: High-contrast disclaimers must satisfy WCAG 2.1 AA (minimum 4.5:1 ratio against background).",
+      "terminology_approved": [
+        "Apex Wealth",
+        "SEBI-registered",
+        "institutional custody",
+        "risk-adjusted returns",
+        "algorithmic rebalancing",
+        "fiduciary"
+      ],
+      "terminology_banned": [
+        "guaranteed returns",
+        "risk-free",
+        "100% profit",
+        "get rich",
+        "instant payout",
+        "double your money",
+        "can't lose"
+      ],
+      "tone_rules": [
+        "Prudent",
+        "Disciplined",
+        "Transparent",
+        "Fiduciary",
+        "No FOMO"
+      ],
+      "approved_facts": [
+        "SEBI Registration Number INP000007890",
+        "Over 2400 Crores AUM",
+        "Custody backed by top-tier institutions",
+        "Audited by Big 4"
+      ],
+      "color_palette": [
+        "#0F172A",
+        "#0D9488",
+        "#D97706",
+        "#64748B"
+      ],
+      "is_indexed": true,
+      "created_at": "2026-11-12T07:25:12.262785",
+      "updated_at": "2026-11-12T07:25:12.442971"
+    },
+    {
+      "id": "04f4111d-7c0b-4749-8214-4e10bee2181c",
+      "workspace_id": "ce7496ab-aee9-42e7-9ed8-ea532a721683",
+      "name": "Aura BioHealth & Wellness Brand Kit",
+      "guidelines_raw": "AURA BIOHEALTH & LIFE SCIENCES \u2014 CLINICAL GOVERNANCE GUIDELINES (v1.8)\n======================================================================\nCDSCO & Consumer Protection Advertising Code Compliance\n\n1. BRAND IDENTITY & ETHOS\n- Brand Identity: Aura BioHealth Solutions.\n- Tone Principles: Empathetic, clinically accurate, modest, scientifically grounded. Never sensationalist.\n\n2. CLINICAL TERMINOLOGY & MEDICAL CLAIMS\n- Approved Terms: \"Aura BioHealth\", \"clinically evaluated\", \"dermatologist tested\", \"evidence-backed formulation\", \"cellular hydration\", \"standardized bio-extracts\".\n- Banned Terms: \"miracle cure\", \"instant weight loss\", \"100% cure\", \"reverse aging overnight\", \"cancer preventive\", \"magical healing\", \"permanent relief\".\n- Regulatory Rule: Do not make disease cure claims for nutraceutical or cosmeceutical products.\n\n3. CERTIFIED CLAIMS & CLINICAL PRECEDENTS\n- Approved Facts:\n  * \"Clinically evaluated across 1,200 participants in double-blind trials\"\n  * \"Manufactured in WHO-GMP certified facilities\"\n  * \"ISO-22000 and FSSAI approved formulation\"\n  * \"Published research in Peer-Reviewed Phytomedicine Journals\"\n\n4. VISUAL IDENTITY & GRAPHICS\n- Approved Hex Palette: #065F46 (Forest Emerald), #0284C7 (Clinical Blue), #10B981 (Organic Mint), #F3F4F6 (Clean White/Grey).\n- Medical Imagery Rule: Avoid graphic medical imagery or before/after photos with deceptive lighting or digital retouching.",
+      "terminology_approved": [
+        "Aura BioHealth",
+        "clinically evaluated",
+        "dermatologist tested",
+        "evidence-backed formulation",
+        "cellular hydration",
+        "standardized bio-extracts"
+      ],
+      "terminology_banned": [
+        "miracle cure",
+        "instant weight loss",
+        "100% cure",
+        "reverse aging overnight",
+        "cancer preventive",
+        "magical healing",
+        "permanent relief"
+      ],
+      "tone_rules": [
+        "Empathetic",
+        "Clinically Accurate",
+        "Modest",
+        "Scientifically Grounded"
+      ],
+      "approved_facts": [
+        "Clinically evaluated across 1200 participants",
+        "WHO-GMP certified facilities",
+        "ISO-22000 and FSSAI approved",
+        "Published in Peer-Reviewed Journals"
+      ],
+      "color_palette": [
+        "#065F46",
+        "#0284C7",
+        "#10B981",
+        "#F3F4F6"
+      ],
+      "is_indexed": true,
+      "created_at": "2026-11-12T07:25:12.657594",
+      "updated_at": "2026-11-12T07:25:13.014603"
+    }
+  ],
+  "drafts": [
+    {
+      "title": "Investor & Media Briefing \u2014 Q3 Operational Milestones",
+      "content_type": "press_release",
+      "status": "in_review",
+      "content": "Innovex today released its Q3 governance report, noting that over 500+ enterprise clients onboarded have automated pre-publication compliance. BrandGuard AI continues to maintain ISO-27001 certified architecture while delivering explainable AI oversight across all digital creative channels.",
+      "findings": [],
+      "comments": []
+    },
+    {
+      "title": "Industry Survey Report: AI Governance & Advertising Standards",
+      "content_type": "blog_post",
+      "status": "in_review",
+      "content": "At Innovex, we believe explainable AI is the future of brand governance. In our recent survey of 42 marketing teams, 83% of content creators reported that manual compliance reviews take over 4 business days. BrandGuard AI resolves this with pre-publication verification, keeping enterprises ASCI compliant.",
+      "findings": [],
+      "comments": []
+    },
+    {
+      "title": "LinkedIn: Thought Leadership \u2014 AI in Brand Compliance",
+      "content_type": "social_post",
+      "status": "changes_requested",
+      "content": "At Innovex, we believe that explainable AI is the future of brand governance. Our enterprise-grade BrandGuard AI platform has helped over 500+ enterprise clients maintain brand consistency while remaining ASCI pre-publication guideline compliant. Founded in 2024, our mission is proactive protection.",
+      "findings": [],
+      "comments": []
+    },
+    {
+      "title": "Instagram Ad Copy \u2014 Festive Season 2026",
+      "content_type": "social_post",
+      "status": "in_review",
+      "content": "This festive season, get the CHEAPEST brand safety solution in the market! BrandGuard AI \u2014 the #1 in India AI-powered compliance tool that is 100% safe for your marketing team. Guaranteed results or your money back! Don't miss this magic software deal. Contact us now for an instant fix!",
+      "findings": [
+        {
+          "id": "8020828a-1d8f-4fc4-98f7-86a05e68e758",
+          "draft_id": "9094fde0-1603-471e-9f71-99855592c194",
+          "severity": "warning",
+          "category": "claim",
+          "text_highlight": "afety solution in the market! BrandGuard AI \u2014 the #1 in India AI-powered compliance tool that is 100%",
+          "explanation": "Detected a \"#1\" ranking claim: \"#1\". This claim is not in the approved facts list. Unsupported promotional claims can carry legal risk (ASCI guidelines).",
+          "guideline_source": "Approved Facts List \u2014 claim not found",
+          "suggestion": "Either add supporting evidence to the approved facts list, or rephrase to remove the unsupported claim.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 0.85,
+          "created_at": "2026-11-12T07:12:54.010846"
+        },
+        {
+          "id": "3f0ef370-2506-4fb1-811d-9010861288a2",
+          "draft_id": "9094fde0-1603-471e-9f71-99855592c194",
+          "severity": "warning",
+          "category": "claim",
+          "text_highlight": "e tool that is 100% safe for your marketing team. Guaranteed results or your money back! Don't miss this magic",
+          "explanation": "Detected a guarantee claim: \"Guaranteed\". This claim is not in the approved facts list. Unsupported promotional claims can carry legal risk (ASCI guidelines).",
+          "guideline_source": "Approved Facts List \u2014 claim not found",
+          "suggestion": "Either add supporting evidence to the approved facts list, or rephrase to remove the unsupported claim.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 0.85,
+          "created_at": "2026-11-12T07:12:54.010849"
+        },
+        {
+          "id": "b2c6694d-719d-4514-ba09-326b7cfbe58e",
+          "draft_id": "9094fde0-1603-471e-9f71-99855592c194",
+          "severity": "error",
+          "category": "terminology",
+          "text_highlight": "magic software",
+          "explanation": "The term \"magic software\" is on the banned terminology list. It should not appear in any brand content.",
+          "guideline_source": "Banned Terms List \u2192 \"magic software\"",
+          "suggestion": "Remove or replace \"magic software\" with an approved alternative.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 1.0,
+          "created_at": "2026-11-12T07:12:54.010831"
+        },
+        {
+          "id": "518ab1e7-f05e-4922-9216-332c1cec2557",
+          "draft_id": "9094fde0-1603-471e-9f71-99855592c194",
+          "severity": "error",
+          "category": "terminology",
+          "text_highlight": "instant fix",
+          "explanation": "The term \"instant fix\" is on the banned terminology list. It should not appear in any brand content.",
+          "guideline_source": "Banned Terms List \u2192 \"instant fix\"",
+          "suggestion": "Remove or replace \"instant fix\" with an approved alternative.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 1.0,
+          "created_at": "2026-11-12T07:12:54.010836"
+        },
+        {
+          "id": "11ea5186-25f4-4065-a4d3-086d9af68a35",
+          "draft_id": "9094fde0-1603-471e-9f71-99855592c194",
+          "severity": "error",
+          "category": "terminology",
+          "text_highlight": "100% safe",
+          "explanation": "The term \"100% safe\" is on the banned terminology list. It should not appear in any brand content.",
+          "guideline_source": "Banned Terms List \u2192 \"100% safe\"",
+          "suggestion": "Remove or replace \"100% safe\" with an approved alternative.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 1.0,
+          "created_at": "2026-11-12T07:12:54.010840"
+        },
+        {
+          "id": "895f8118-e975-4319-ab20-0975e5af8e5b",
+          "draft_id": "9094fde0-1603-471e-9f71-99855592c194",
+          "severity": "error",
+          "category": "terminology",
+          "text_highlight": "Guaranteed",
+          "explanation": "The term \"Guaranteed\" is on the banned terminology list. It should not appear in any brand content.",
+          "guideline_source": "Banned Terms List \u2192 \"guaranteed\"",
+          "suggestion": "Remove or replace \"Guaranteed\" with an approved alternative.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 1.0,
+          "created_at": "2026-11-12T07:12:54.010843"
+        }
+      ],
+      "comments": [
+        {
+          "id": "bf15304b-f0ba-4679-8203-800e3c8064b7",
+          "draft_id": "9094fde0-1603-471e-9f71-99855592c194",
+          "user_id": "dd57791f-0422-406a-af09-98ba83bb04e7",
+          "content": "Flagged several banned terms and unverified superlative claims. Please rephrase.",
+          "created_at": "2026-11-12T07:12:54.010590"
+        }
+      ]
+    },
+    {
+      "title": "Enterprise Welcome Email Template",
+      "content_type": "email",
+      "status": "approved",
+      "content": "Welcome to BrandGuard AI! Founded in 2024, our enterprise-grade platform empowers marketing teams with explainable AI findings and pre-publication governance. Over 500+ enterprise clients onboarded trust our ISO-27001 certified architecture.",
+      "findings": [],
+      "comments": []
+    },
+    {
+      "title": "Launch Campaign \u2014 Promotional Social Copy",
+      "content_type": "social_post",
+      "status": "in_review",
+      "content": "Introducing Brand Guard! We are the #1 in India brand protection tool. Our software is 100% safe and guaranteed to stop every brand crisis. Don't waste budget on expensive suites when you can get cheap software right here. Primary highlight styled in #FF0055.",
+      "findings": [
+        {
+          "id": "f07a099a-8a0e-4851-9a06-982b60a3bd29",
+          "draft_id": "fd1da909-197c-4a18-8532-7e38f17dfb6f",
+          "severity": "warning",
+          "category": "claim",
+          "text_highlight": "Introducing Brand Guard! We are the #1 in India brand protection tool. Our software is 1",
+          "explanation": "Detected a \"#1\" ranking claim: \"#1\". This claim is not in the approved facts list. Unsupported promotional claims can carry legal risk (ASCI guidelines).",
+          "guideline_source": "Approved Facts List \u2014 claim not found",
+          "suggestion": "Either add supporting evidence to the approved facts list, or rephrase to remove the unsupported claim.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 0.85,
+          "created_at": "2026-11-12T07:12:53.921154"
+        },
+        {
+          "id": "3fbc1c2b-8228-4947-83ef-7ef94a3cf449",
+          "draft_id": "fd1da909-197c-4a18-8532-7e38f17dfb6f",
+          "severity": "warning",
+          "category": "claim",
+          "text_highlight": "nd protection tool. Our software is 100% safe and guaranteed to stop every brand crisis. Don't waste budget on",
+          "explanation": "Detected a guarantee claim: \"guaranteed\". This claim is not in the approved facts list. Unsupported promotional claims can carry legal risk (ASCI guidelines).",
+          "guideline_source": "Approved Facts List \u2014 claim not found",
+          "suggestion": "Either add supporting evidence to the approved facts list, or rephrase to remove the unsupported claim.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 0.85,
+          "created_at": "2026-11-12T07:12:53.921157"
+        },
+        {
+          "id": "692686cf-5048-4a37-8f31-5a55e92392a1",
+          "draft_id": "fd1da909-197c-4a18-8532-7e38f17dfb6f",
+          "severity": "warning",
+          "category": "visual",
+          "text_highlight": "#FF0055",
+          "explanation": "Colour #FF0055 is not in the approved brand palette. Approved colours: #1E40AF, #2563EB, #10B981, #F59E0B, #E11D48.",
+          "guideline_source": "Brand Colour Palette \u2192 approved: #1E40AF, #2563EB, #10B981, #F59E0B, #E11D48",
+          "suggestion": "Replace #FF0055 with an approved brand colour.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 1.0,
+          "created_at": "2026-11-12T07:12:53.921161"
+        },
+        {
+          "id": "08db9326-0e30-46b0-b0b8-09b2ac0d7393",
+          "draft_id": "fd1da909-197c-4a18-8532-7e38f17dfb6f",
+          "severity": "error",
+          "category": "terminology",
+          "text_highlight": "cheap",
+          "explanation": "The term \"cheap\" is on the banned terminology list. It should not appear in any brand content.",
+          "guideline_source": "Banned Terms List \u2192 \"cheap\"",
+          "suggestion": "Remove or replace \"cheap\" with an approved alternative.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 1.0,
+          "created_at": "2026-11-12T07:12:53.921141"
+        },
+        {
+          "id": "2efa5204-7a32-4d3d-b4eb-d67ee18451b0",
+          "draft_id": "fd1da909-197c-4a18-8532-7e38f17dfb6f",
+          "severity": "error",
+          "category": "terminology",
+          "text_highlight": "100% safe",
+          "explanation": "The term \"100% safe\" is on the banned terminology list. It should not appear in any brand content.",
+          "guideline_source": "Banned Terms List \u2192 \"100% safe\"",
+          "suggestion": "Remove or replace \"100% safe\" with an approved alternative.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 1.0,
+          "created_at": "2026-11-12T07:12:53.921147"
+        },
+        {
+          "id": "de702938-6a16-4f8e-84e7-3b7176538f21",
+          "draft_id": "fd1da909-197c-4a18-8532-7e38f17dfb6f",
+          "severity": "error",
+          "category": "terminology",
+          "text_highlight": "guaranteed",
+          "explanation": "The term \"guaranteed\" is on the banned terminology list. It should not appear in any brand content.",
+          "guideline_source": "Banned Terms List \u2192 \"guaranteed\"",
+          "suggestion": "Remove or replace \"guaranteed\" with an approved alternative.",
+          "status": "open",
+          "is_ai_generated": false,
+          "confidence": 1.0,
+          "created_at": "2026-11-12T07:12:53.921151"
+        }
+      ],
+      "comments": [
+        {
+          "id": "3834c23a-4991-400e-b528-70ae1309fc39",
+          "draft_id": "fd1da909-197c-4a18-8532-7e38f17dfb6f",
+          "user_id": "dd57791f-0422-406a-af09-98ba83bb04e7",
+          "content": "Flagged several banned terms and unverified superlative claims. Please rephrase.",
+          "created_at": "2026-11-12T07:12:53.919989"
+        }
+      ]
+    }
+  ],
+  "audit_log": [
+    {
+      "id": "c83835cc-02f0-451b-b5d8-d969a0a09716",
+      "user_id": "5f9ac1a8-b688-4016-9c9e-2984c760621b",
+      "action": "review_triggered",
+      "entity_type": "draft",
+      "entity_id": "cd48cb8e-6053-4135-8b74-ef8435781ca9",
+      "details": {
+        "rule_findings": 0,
+        "ai_findings": 0,
+        "total_findings": 0
+      },
+      "ai_service_used": "rule_engine + brandguard_semantic_engine",
+      "created_at": "2026-11-12T07:22:10.199231"
+    },
+    {
+      "id": "f747d570-525b-4ddf-aa50-cb103a64f958",
+      "user_id": "5f9ac1a8-b688-4016-9c9e-2984c760621b",
+      "action": "draft_created",
+      "entity_type": "draft",
+      "entity_id": "cd48cb8e-6053-4135-8b74-ef8435781ca9",
+      "details": {
+        "title": "Investor & Media Briefing \u2014 Q3 Operational Milestones",
+        "content_type": "press_release"
+      },
+      "ai_service_used": null,
+      "created_at": "2026-11-12T07:22:09.985309"
+    },
+    {
+      "id": "a1275d9e-ae2d-4747-9a51-98d7a7331725",
+      "user_id": "5f9ac1a8-b688-4016-9c9e-2984c760621b",
+      "action": "review_triggered",
+      "entity_type": "draft",
+      "entity_id": "44a5aea6-484f-4450-8756-59f951e87723",
+      "details": {
+        "rule_findings": 0,
+        "ai_findings": 0,
+        "total_findings": 0
+      },
+      "ai_service_used": "rule_engine + brandguard_semantic_engine",
+      "created_at": "2026-11-12T07:22:09.591492"
+    },
+    {
+      "id": "5f3071b4-09c6-434c-bc2c-7246a7a3fa70",
+      "user_id": "5f9ac1a8-b688-4016-9c9e-2984c760621b",
+      "action": "draft_created",
+      "entity_type": "draft",
+      "entity_id": "44a5aea6-484f-4450-8756-59f951e87723",
+      "details": {
+        "title": "Industry Survey Report: AI Governance & Advertising Standards",
+        "content_type": "blog_post"
+      },
+      "ai_service_used": null,
+      "created_at": "2026-11-12T07:22:09.416992"
+    },
+    {
+      "id": "e4a56755-fd88-42b6-bbe4-eeb5bd5e0e53",
+      "user_id": "81c37b8a-2bab-4b23-b580-8def8b42a7a8",
+      "action": "draft_status_changed",
+      "entity_type": "draft",
+      "entity_id": "8773ba04-7e1c-4590-aa05-408ff503fb74",
+      "details": {
+        "old_status": "changes_requested",
+        "new_status": "changes_requested"
+      },
+      "ai_service_used": null,
+      "created_at": "2026-11-12T07:14:49.448013"
+    },
+    {
+      "id": "c8a33e47-8b74-4f6f-add1-22dd86b2f896",
+      "user_id": "81c37b8a-2bab-4b23-b580-8def8b42a7a8",
+      "action": "draft_status_changed",
+      "entity_type": "draft",
+      "entity_id": "8773ba04-7e1c-4590-aa05-408ff503fb74",
+      "details": {
+        "old_status": "approved",
+        "new_status": "changes_requested"
+      },
+      "ai_service_used": null,
+      "created_at": "2026-11-12T07:14:21.544470"
+    },
+    {
+      "id": "5b8e93e4-5b24-4bad-9f04-860fa0ad86b0",
+      "user_id": "81c37b8a-2bab-4b23-b580-8def8b42a7a8",
+      "action": "draft_status_changed",
+      "entity_type": "draft",
+      "entity_id": "8773ba04-7e1c-4590-aa05-408ff503fb74",
+      "details": {
+        "old_status": "approved",
+        "new_status": "approved"
+      },
+      "ai_service_used": null,
+      "created_at": "2026-11-12T07:14:11.355553"
+    },
+    {
+      "id": "b1289be4-cd36-4d67-a381-0ed57503d546",
+      "user_id": "5f9ac1a8-b688-4016-9c9e-2984c760621b",
+      "action": "draft_created",
+      "entity_type": "draft",
+      "entity_id": "8773ba04-7e1c-4590-aa05-408ff503fb74",
+      "details": {
+        "title": "LinkedIn: Thought Leadership \u2014 AI in Brand Compliance",
+        "findings_count": 0
+      },
+      "ai_service_used": "rule_engine",
+      "created_at": "2026-11-12T07:12:54.011569"
+    },
+    {
+      "id": "c70e924f-e1dd-4a76-a80d-610186f0f220",
+      "user_id": "5f9ac1a8-b688-4016-9c9e-2984c760621b",
+      "action": "draft_created",
+      "entity_type": "draft",
+      "entity_id": "9094fde0-1603-471e-9f71-99855592c194",
+      "details": {
+        "title": "Instagram Ad Copy \u2014 Festive Season 2026",
+        "findings_count": 6
+      },
+      "ai_service_used": "rule_engine",
+      "created_at": "2026-11-12T07:12:54.010200"
+    },
+    {
+      "id": "afc833a7-9c83-45bb-8bc1-23a2f32967d3",
+      "user_id": "5f9ac1a8-b688-4016-9c9e-2984c760621b",
+      "action": "draft_created",
+      "entity_type": "draft",
+      "entity_id": "29728586-0b5f-40d7-be5a-918ba502fd7d",
+      "details": {
+        "title": "Enterprise Welcome Email Template",
+        "findings_count": 0
+      },
+      "ai_service_used": "rule_engine",
+      "created_at": "2026-11-12T07:12:53.922543"
+    },
+    {
+      "id": "9b151fb4-d92b-4a9f-8708-acb23c69e3df",
+      "user_id": "5f9ac1a8-b688-4016-9c9e-2984c760621b",
+      "action": "draft_created",
+      "entity_type": "draft",
+      "entity_id": "fd1da909-197c-4a18-8532-7e38f17dfb6f",
+      "details": {
+        "title": "Launch Campaign \u2014 Promotional Social Copy",
+        "findings_count": 6
+      },
+      "ai_service_used": "rule_engine",
+      "created_at": "2026-11-12T07:12:53.919032"
+    }
+  ]
+}
