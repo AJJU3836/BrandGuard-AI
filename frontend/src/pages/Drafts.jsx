@@ -6,12 +6,13 @@ import {
   FileText, 
   Plus, 
   Search, 
-  Filter, 
   Clock, 
   CheckCircle2, 
   AlertCircle, 
   ArrowRight,
-  Sparkles
+  Sparkles,
+  ShieldAlert,
+  ShieldCheck
 } from 'lucide-react'
 
 export default function Drafts() {
@@ -161,7 +162,7 @@ export default function Drafts() {
               className="p-5 hover:bg-gray-50 flex items-center justify-between transition-colors block"
             >
               <div className="space-y-1.5 flex-1 pr-6">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 flex-wrap">
                   <h3 className="text-base font-semibold text-gray-900 hover:text-brand-600">
                     {draft.title}
                   </h3>
@@ -169,13 +170,27 @@ export default function Drafts() {
                   <span className="capitalize px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
                     {draft.content_type?.replace('_', ' ')}
                   </span>
+                  {/* Finding count badge */}
+                  {draft.findings_count > 0 ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                      <ShieldAlert className="w-3 h-3" />
+                      {draft.findings_count} violation{draft.findings_count !== 1 ? 's' : ''}
+                    </span>
+                  ) : draft.findings_count === 0 && draft.status !== 'draft' ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <ShieldCheck className="w-3 h-3" />
+                      Clean
+                    </span>
+                  ) : null}
                 </div>
-                <p className="text-sm text-gray-500 line-clamp-1 font-mono text-xs">
-                  {draft.content}
+                <p className="text-sm text-gray-400 line-clamp-1 text-xs italic">
+                  {draft.content?.slice(0, 120)}{draft.content?.length > 120 ? '…' : ''}
                 </p>
-                <p className="text-xs text-gray-400">
-                  Last updated {new Date(draft.updated_at).toLocaleString()}
-                </p>
+                <div className="flex items-center gap-3 text-xs text-gray-400">
+                  <span>{draft.content?.split(/\s+/).filter(Boolean).length || 0} words</span>
+                  <span>·</span>
+                  <span>Updated {new Date(draft.updated_at).toLocaleString()}</span>
+                </div>
               </div>
 
               <div className="flex items-center gap-2 text-brand-600 font-medium text-sm">

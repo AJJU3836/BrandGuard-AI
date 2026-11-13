@@ -4,7 +4,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -73,7 +73,9 @@ def list_drafts(
     current_user: User = Depends(get_current_user),
 ):
     """List drafts in a workspace, optionally filtered by status."""
-    query = db.query(Draft).filter(Draft.workspace_id == workspace_id)
+    from sqlalchemy.orm import joinedload
+    from app.models.finding import Finding
+    query = db.query(Draft).options(joinedload(Draft.findings)).filter(Draft.workspace_id == workspace_id)
     if status_filter:
         query = query.filter(Draft.status == status_filter)
     return query.order_by(Draft.updated_at.desc()).all()

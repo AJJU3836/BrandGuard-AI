@@ -13,7 +13,8 @@ import {
   PenLine, 
   Building2,
   SlidersHorizontal,
-  ChevronRight
+  ChevronRight,
+  ExternalLink
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -172,8 +173,16 @@ export default function Layout() {
           </div>
 
           <div className="flex items-center gap-3">
+            <a
+              href="https://brandguard-api-zfcd.onrender.com/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-brand-600 transition-colors"
+            >
+              API Docs
+            </a>
             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Policy v2.4 Active
             </span>
           </div>

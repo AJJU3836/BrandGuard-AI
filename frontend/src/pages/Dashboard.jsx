@@ -560,8 +560,12 @@ export default function Dashboard() {
                     <td className="py-2.5 px-3 capitalize text-gray-500">
                       {log.entity_type}
                     </td>
-                    <td className="py-2.5 px-3 text-gray-600 max-w-xs truncate font-mono text-[11px]">
-                      {log.details ? JSON.stringify(log.details) : '—'}
+                    <td className="py-2.5 px-3 text-gray-600 max-w-xs text-[11px]">
+                      {log.details
+                        ? Object.entries(log.details)
+                            .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`)
+                            .join(' · ')
+                        : '—'}
                     </td>
                     <td className="py-2.5 px-3">
                       {log.ai_service_used ? (
